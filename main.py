@@ -20,9 +20,14 @@ fragment_shader_src = """
 
 out vec4 color;
 
+uniform vec2 resolution;
+uniform float time;
+
 void main()
 {
-    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec3 col = 0.5 + 0.5 * cos(time + uv.xyx + vec3(0, 2, 4));
+    color = vec4(col, 1.0f);
 }
 """
 
@@ -35,6 +40,8 @@ class Game:
         self.vbo_buffer = glGenBuffers(1)
         self.init_vao_buffer()
         self.shader_program = self.create_shaders()
+        self.active_shader_program = self.shader_program
+        self.uniform_to_location = self.get_uniform_locations()
 
     def run(self):
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
@@ -47,14 +54,27 @@ class Game:
                     if event.key == pygame.K_ESCAPE:
                         quit()
 
-            glBindVertexArray(self.vao_buffer)
-
             glClear(GL_COLOR_BUFFER_BIT)
-            glDrawArrays(GL_TRIANGLES, 0, 3)
+            glUniform1f(self.uniform_to_location['time'],
+                        pygame.time.get_ticks() / 1000)
+            glUniform2f(self.uniform_to_location['resolution'],
+                        self.window_size[0], self.window_size[1])
 
+            glBindVertexArray(self.vao_buffer)
+            glDrawArrays(GL_TRIANGLES, 0, 3)
             glBindVertexArray(0)
 
             pygame.display.flip()
+
+    def get_uniform_locations(self) -> dict:
+        form2pos = {
+            'time': glGetUniformLocation(self.active_shader_program,
+                                          'time'),
+            'resolution': glGetUniformLocation(self.active_shader_program,
+                                               'resolution')
+        }
+
+        return form2pos
 
     def init_vao_buffer(self):
         glBindVertexArray(self.vao_buffer)
