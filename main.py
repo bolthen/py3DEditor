@@ -20,14 +20,9 @@ fragment_shader_src = """
 
 out vec4 color;
 
-uniform vec2 resolution;
-uniform float time;
-
 void main()
 {
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
-    vec3 col = 0.5 + 0.5 * cos(time + uv.xyx + vec3(0, 2, 4));
-    color = vec4(col, 1.0f);
+    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
 }
 """
 
@@ -35,13 +30,15 @@ void main()
 class Game:
     def __init__(self):
         self.window_size = (800, 600)
-        self.init_pygame()
+        self._init_pygame()
         self.vao_buffer = glGenVertexArrays(1)
         self.vbo_buffer = glGenBuffers(1)
-        self.init_vao_buffer()
-        self.shader_program = self.create_shaders()
+        self.ebo_buffer = glGenBuffers(1)
+        # self._move_triangle_to_vao_buffer()
+        self._move_rect_to_vao()
+        self.shader_program = self._create_shaders()
         self.active_shader_program = self.shader_program
-        self.uniform_to_location = self.get_uniform_locations()
+        # self.uniform_to_location = self._get_uniforms_locations()
 
     def run(self):
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
@@ -55,48 +52,76 @@ class Game:
                         quit()
 
             glClear(GL_COLOR_BUFFER_BIT)
-            glUniform1f(self.uniform_to_location['time'],
-                        pygame.time.get_ticks() / 1000)
-            glUniform2f(self.uniform_to_location['resolution'],
-                        self.window_size[0], self.window_size[1])
+            glUseProgram(self.shader_program)
+            # self._set_uniforms()
 
             glBindVertexArray(self.vao_buffer)
-            glDrawArrays(GL_TRIANGLES, 0, 3)
+
+            # glDrawArrays(GL_TRIANGLES, 0, 3)
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
+
             glBindVertexArray(0)
 
             pygame.display.flip()
 
-    def get_uniform_locations(self) -> dict:
+    def _set_uniforms(self):
+        glUniform1f(self.uniform_to_location['time'],
+                    pygame.time.get_ticks() / 1000)
+        glUniform2f(self.uniform_to_location['resolution'],
+                    self.window_size[0], self.window_size[1])
+
+    def _get_uniforms_locations(self) -> dict:
         form2pos = {
             'time': glGetUniformLocation(self.active_shader_program,
-                                          'time'),
+                                        'time'),
             'resolution': glGetUniformLocation(self.active_shader_program,
                                                'resolution')
         }
 
         return form2pos
 
-    def init_vao_buffer(self):
+    def _move_rect_to_vao(self):
+        vertices = np.array([
+            0.5,  0.5, 0.0,
+            0.5, -0.5, 0.0,
+            -0.5, -0.5, 0.0,
+            -0.5, 0.5, 0.0
+        ], dtype=np.float32)
+
+        indices = np.array([
+            0, 1, 3,
+            1, 2, 3
+        ], dtype=np.uint32)
+
         glBindVertexArray(self.vao_buffer)
-        self.move_triangle_to_vbo()
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo_buffer)
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo_buffer)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertices.itemsize * 3,
+                              ctypes.c_void_p(0))
+        glEnableVertexAttribArray(0)
         glBindVertexArray(0)
 
-    def move_triangle_to_vbo(self):
-        triangles = np.array([
+    def _move_triangle_to_vao_buffer(self):
+        glBindVertexArray(self.vao_buffer)
+        self._move_vertexes_to_vbo([
             -0.5, -0.5, 0.0,
             0.5, -0.5, 0.0,
             0.0, 0.5, 0.0
-        ], dtype=np.float32)
+        ])
+        glBindVertexArray(0)
 
+    def _move_vertexes_to_vbo(self, vertices: list):
+        points = np.array(vertices, dtype=np.float32)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo_buffer)
-        glBufferData(GL_ARRAY_BUFFER, triangles.nbytes, triangles,
-                     GL_STATIC_DRAW)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, triangles.itemsize * 3,
+        glBufferData(GL_ARRAY_BUFFER, points.nbytes, points, GL_STATIC_DRAW)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, points.itemsize * 3,
                               ctypes.c_void_p(0))
         glEnableVertexAttribArray(0)
 
     @staticmethod
-    def create_shaders():
+    def _create_shaders():
         vertex_shader = compileShader(vertex_shader_src, GL_VERTEX_SHADER)
         fragment_shader = compileShader(fragment_shader_src,
                                         GL_FRAGMENT_SHADER)
@@ -109,10 +134,38 @@ class Game:
 
         return shader_program
 
-    def init_pygame(self):
+    def _init_pygame(self):
         pygame.init()
         screen = pygame.display.set_mode(self.window_size,
                                          pygame.DOUBLEBUF | pygame.OPENGL)
+
+    @staticmethod
+    def enable_wireframe():
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
+    @staticmethod
+    def disable_wireframe():
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+    def _load_texture(self, path: str):
+        image, width, height = self._get_texture_data_by_name(path)
+        texture = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, texture)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, image)
+        glGenerateMipmap(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, 0)
+
+
+
+    @staticmethod
+    def _get_texture_data_by_name(path: str):
+        texture_surface = pygame.image.load(path)
+        texture_data = pygame.image.tostring(texture_surface, "RGBA")
+        return (texture_data,
+                texture_surface.get_width(),
+                texture_surface.get_height()
+                )
 
 
 if __name__ == '__main__':
