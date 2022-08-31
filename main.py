@@ -8,10 +8,17 @@ vertex_shader_src = """
 #version 330 core
 
 layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 color;
+layout (location = 2) in vec2 textureCoord;
+
+out vec3 ourColor;
+out vec2 ourTextureCoord;
 
 void main()
 {
-    gl_Position = vec4(position.x, position.y, position.z, 1.0);
+    gl_Position = vec4(position, 1.0f);
+    ourColor = color;
+    ourTextureCoord = textureCoord;
 }
 """
 
@@ -20,9 +27,17 @@ fragment_shader_src = """
 
 out vec4 color;
 
+in vec3 ourColor;
+in vec2 ourTextureCoord;
+
+uniform sampler2D firstTexture;
+uniform sampler2D secondTexture;
+
 void main()
 {
-    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    color = mix(texture(firstTexture, ourTextureCoord),
+                texture(secondTexture, ourTextureCoord),
+                0.2f);
 }
 """
 
@@ -43,6 +58,9 @@ class Game:
     def run(self):
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
 
+        face_texture = self._load_texture('textures/awesomeface.png')
+        bricks_texture = self._load_texture('textures/container.jpg')
+
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -52,8 +70,17 @@ class Game:
                         quit()
 
             glClear(GL_COLOR_BUFFER_BIT)
-            glUseProgram(self.shader_program)
             # self._set_uniforms()
+
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, bricks_texture)
+            glUniform1i(glGetUniformLocation(self.active_shader_program,
+                                             "firstTexture"), 0)
+
+            glActiveTexture(GL_TEXTURE1)
+            glBindTexture(GL_TEXTURE_2D, face_texture)
+            glUniform1i(glGetUniformLocation(self.active_shader_program,
+                                             "secondTexture"), 1)
 
             glBindVertexArray(self.vao_buffer)
 
@@ -82,10 +109,10 @@ class Game:
 
     def _move_rect_to_vao(self):
         vertices = np.array([
-            0.5,  0.5, 0.0,
-            0.5, -0.5, 0.0,
-            -0.5, -0.5, 0.0,
-            -0.5, 0.5, 0.0
+            0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0,
+            0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   1.0, 0.0,
+            -0.5, -0.5, 0.0,  0.0, 0.0, 1.0,   0.0, 0.0,
+            -0.5, 0.5, 0.0,   0.0, 0.0, 0.0,   0.0, 1.0
         ], dtype=np.float32)
 
         indices = np.array([
@@ -94,13 +121,24 @@ class Game:
         ], dtype=np.uint32)
 
         glBindVertexArray(self.vao_buffer)
+
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo_buffer)
         glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo_buffer)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertices.itemsize * 3,
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
                               ctypes.c_void_p(0))
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
+                              ctypes.c_void_p(3 * vertices.itemsize))
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
+                              ctypes.c_void_p(6 * vertices.itemsize))
+
         glEnableVertexAttribArray(0)
+        glEnableVertexAttribArray(1)
+        glEnableVertexAttribArray(2)
+
         glBindVertexArray(0)
 
     def _move_triangle_to_vao_buffer(self):
@@ -151,17 +189,24 @@ class Game:
         image, width, height = self._get_texture_data_by_name(path)
         texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                      GL_UNSIGNED_BYTE, image)
         glGenerateMipmap(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, 0)
-
-
+        return texture
 
     @staticmethod
-    def _get_texture_data_by_name(path: str):
+    def _get_texture_data_by_name(path: str, should_flip=True):
         texture_surface = pygame.image.load(path)
-        texture_data = pygame.image.tostring(texture_surface, "RGBA")
+        texture_data = pygame.image.tostring(texture_surface, "RGB",
+                                             should_flip)
         return (texture_data,
                 texture_surface.get_width(),
                 texture_surface.get_height()
