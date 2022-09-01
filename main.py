@@ -1,12 +1,13 @@
 import math
 
 import pygame
+import shapes
 import numpy as np
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileShader, compileProgram
-from matrix_functions import *
+import matrix_functions as matrices
+from matrix_functions import concatenate
 from pyrr import Matrix44
-
 
 vertex_shader_src = """
 #version 330 core
@@ -18,11 +19,13 @@ layout (location = 2) in vec2 textureCoord;
 out vec3 ourColor;
 out vec2 ourTextureCoord;
 
-uniform mat4 transform;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main()
 {
-    gl_Position = transform * vec4(position, 1.0f);
+    gl_Position = projection * view * model * vec4(position, 1.0f);
     ourColor = color;
     ourTextureCoord = textureCoord;
 }
@@ -56,13 +59,20 @@ class Game:
         self.vbo_buffer = glGenBuffers(1)
         self.ebo_buffer = glGenBuffers(1)
         # self._move_triangle_to_vao_buffer()
-        self._move_rect_to_vao()
+        # self._move_rect_to_vao()
+        self._move_cube_to_vao()
         self.shader_program = self._create_shaders()
         self.active_shader_program = self.shader_program
         self.uniform_to_location = self._get_uniforms_locations()
+        self._set_transform_matrices(projection=matrices.perspective(
+            80, self.window_size[0] / self.window_size[1], 0.1, 100))
+        # glUniformMatrix4fv(
+        #     self.uniform_to_location['projection'], 1, GL_FALSE,
+        #     Matrix44.perspective_projection(80, 4 / 3, 0.1, 100, 'f4'))
 
     def run(self):
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
+        glEnable(GL_DEPTH_TEST)
 
         face_texture = self._load_texture('textures/awesomeface.png')
         bricks_texture = self._load_texture('textures/container.jpg')
@@ -75,30 +85,42 @@ class Game:
                     if event.key == pygame.K_ESCAPE:
                         quit()
 
-            glClear(GL_COLOR_BUFFER_BIT)
-
-            self._set_uniforms()
-            self._set_transform_matrix(rotate_z(pygame.time.get_ticks() / 10) @
-                                       translate(0.5, -0.5, 0))
-
-            glActiveTexture(GL_TEXTURE0)
-            glBindTexture(GL_TEXTURE_2D, bricks_texture)
-            glUniform1i(glGetUniformLocation(self.active_shader_program,
-                                             "firstTexture"), 0)
-
-            glActiveTexture(GL_TEXTURE1)
-            glBindTexture(GL_TEXTURE_2D, face_texture)
-            glUniform1i(glGetUniformLocation(self.active_shader_program,
-                                             "secondTexture"), 1)
-
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             glBindVertexArray(self.vao_buffer)
 
-            # glDrawArrays(GL_TRIANGLES, 0, 3)
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
+            self._set_textures([bricks_texture, face_texture])
+            self._set_uniforms()
+
+            for i, pos in enumerate(shapes.cubes_model_pose):
+                k = pygame.time.get_ticks() / 100
+                # rotation = matrices.rotate_axis(k, i * 5, i * 10, i)
+                offsets = shapes.cubes_model_pose
+                self._set_transform_matrices(
+                    # view=matrices.translate(0, 0, -3.0),
+                    view=matrices.translate(offsets[i][0],
+                                            offsets[i][1],
+                                            offsets[i][2]),
+                    model=matrices.rotate_x(i * k) @
+                          matrices.rotate_y(i * k) @
+                          matrices.rotate_z(i * k))
+                glDrawArrays(GL_TRIANGLES, 0, 36)
+
+            # glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
 
             glBindVertexArray(0)
 
             pygame.display.flip()
+
+    def _set_textures(self, textures: list):
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, textures[0])
+        glUniform1i(glGetUniformLocation(self.active_shader_program,
+                                         "firstTexture"), 0)
+
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_2D, textures[1])
+        glUniform1i(glGetUniformLocation(self.active_shader_program,
+                                         "secondTexture"), 1)
 
     def _set_uniforms(self):
         glUniform1f(self.uniform_to_location['time'],
@@ -106,35 +128,66 @@ class Game:
         glUniform2f(self.uniform_to_location['resolution'],
                     self.window_size[0], self.window_size[1])
 
-    def _set_transform_matrix(self, matrix):
-        glUniformMatrix4fv(self.uniform_to_location['transform'],
-                           1, GL_FALSE, np.concatenate(matrix))
+    def _set_transform_matrices(self, **kwargs):
+        """
+        'model' - world position\n
+        'projection' - camera FOV: perspective or orthographic\n
+        'view' - camera pos
+        """
+        if 'projection' in kwargs.keys():
+            glUniformMatrix4fv(
+                self.uniform_to_location['projection'], 1, GL_FALSE,
+                concatenate(kwargs['projection']))
+
+        if 'model' in kwargs.keys():
+            glUniformMatrix4fv(
+                self.uniform_to_location['model'], 1, GL_FALSE,
+                concatenate(kwargs['model']))
+
+        if 'view' in kwargs.keys():
+            glUniformMatrix4fv(
+                self.uniform_to_location['view'], 1, GL_FALSE,
+                concatenate(kwargs['view']))
 
     def _get_uniforms_locations(self) -> dict:
         form2pos = {
             'time': glGetUniformLocation(self.active_shader_program,
-                                        'time'),
+                                         'time'),
             'resolution': glGetUniformLocation(self.active_shader_program,
                                                'resolution'),
-            'transform': glGetUniformLocation(self.active_shader_program,
-                                              'transform')
+            'view': glGetUniformLocation(self.active_shader_program,
+                                         'view'),
+            'model': glGetUniformLocation(self.active_shader_program,
+                                          'model'),
+            'projection': glGetUniformLocation(self.active_shader_program,
+                                               'projection')
         }
 
         return form2pos
 
+    def _move_cube_to_vao(self):
+        vertices = shapes.cube
+
+        glBindVertexArray(self.vao_buffer)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo_buffer)
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * vertices.itemsize,
+                              ctypes.c_void_p(0))
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * vertices.itemsize,
+                              ctypes.c_void_p(3 * vertices.itemsize))
+
+        glEnableVertexAttribArray(0)
+        glEnableVertexAttribArray(2)
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+        glBindVertexArray(0)
+
     def _move_rect_to_vao(self):
-        vertices = np.array([
-            0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0,
-            0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   1.0, 0.0,
-            -0.5, -0.5, 0.0,  0.0, 0.0, 1.0,   0.0, 0.0,
-            -0.5, 0.5, 0.0,   0.0, 0.0, 0.0,   0.0, 1.0
-        ], dtype=np.float32)
-
-        indices = np.array([
-            0, 1, 3,
-            1, 2, 3
-        ], dtype=np.uint32)
-
+        vertices = shapes.rect
+        indices = shapes.rect_indices
         glBindVertexArray(self.vao_buffer)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo_buffer)
@@ -232,11 +285,6 @@ if __name__ == '__main__':
     game = Game()
     game.run()
 
-
-
-
-
-
 '''
 import moderngl_window as mglw
 
@@ -268,7 +316,6 @@ if __name__ == '__main__':
     mglw.run_window_config(App)
 
 '''
-
 
 '''
 from pyrr import Matrix44
