@@ -1,7 +1,11 @@
+import math
+
 import pygame
 import numpy as np
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileShader, compileProgram
+from matrix_functions import *
+from pyrr import Matrix44
 
 
 vertex_shader_src = """
@@ -14,9 +18,11 @@ layout (location = 2) in vec2 textureCoord;
 out vec3 ourColor;
 out vec2 ourTextureCoord;
 
+uniform mat4 transform;
+
 void main()
 {
-    gl_Position = vec4(position, 1.0f);
+    gl_Position = transform * vec4(position, 1.0f);
     ourColor = color;
     ourTextureCoord = textureCoord;
 }
@@ -53,7 +59,7 @@ class Game:
         self._move_rect_to_vao()
         self.shader_program = self._create_shaders()
         self.active_shader_program = self.shader_program
-        # self.uniform_to_location = self._get_uniforms_locations()
+        self.uniform_to_location = self._get_uniforms_locations()
 
     def run(self):
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
@@ -70,7 +76,10 @@ class Game:
                         quit()
 
             glClear(GL_COLOR_BUFFER_BIT)
-            # self._set_uniforms()
+
+            self._set_uniforms()
+            self._set_transform_matrix(rotate_z(pygame.time.get_ticks() / 10) @
+                                       translate(0.5, -0.5, 0))
 
             glActiveTexture(GL_TEXTURE0)
             glBindTexture(GL_TEXTURE_2D, bricks_texture)
@@ -97,12 +106,18 @@ class Game:
         glUniform2f(self.uniform_to_location['resolution'],
                     self.window_size[0], self.window_size[1])
 
+    def _set_transform_matrix(self, matrix):
+        glUniformMatrix4fv(self.uniform_to_location['transform'],
+                           1, GL_FALSE, np.concatenate(matrix))
+
     def _get_uniforms_locations(self) -> dict:
         form2pos = {
             'time': glGetUniformLocation(self.active_shader_program,
                                         'time'),
             'resolution': glGetUniformLocation(self.active_shader_program,
-                                               'resolution')
+                                               'resolution'),
+            'transform': glGetUniformLocation(self.active_shader_program,
+                                              'transform')
         }
 
         return form2pos
