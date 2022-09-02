@@ -46,7 +46,8 @@ cube = np.array([
 ], dtype=np.float32)
 
 cubes_model_pose = [
-    np.array([0.0, 0.0, -3.0], dtype=np.float32),
+    # np.array([0.0, 0.0, -3.0], dtype=np.float32),
+    np.array([0.0, 0.0, 0.0], dtype=np.float32),
     np.array([2.0, 5.0, -15.0], dtype=np.float32),
     np.array([-1.5, -2.2, -2.5], dtype=np.float32),
     np.array([-3.8, -2.0, -12.3], dtype=np.float32),

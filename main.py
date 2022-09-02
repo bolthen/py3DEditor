@@ -1,4 +1,5 @@
 import math
+import threading
 
 import pygame
 import shapes
@@ -8,6 +9,7 @@ from OpenGL.GL.shaders import compileShader, compileProgram
 import matrix_functions as matrices
 from matrix_functions import concatenate
 from pyrr import Matrix44
+from camera import Camera
 
 vertex_shader_src = """
 #version 330 core
@@ -55,7 +57,8 @@ void main()
 
 class Game:
     def __init__(self):
-        self.window_size = (800, 600)
+        self.window_size = (1920, 1080)
+        self.aspect_ratio = int(self.window_size[0] / self.window_size[1])
         self._init_pygame()
         self.vao_buffer = glGenVertexArrays(1)
         self.vbo_buffer = glGenBuffers(1)
@@ -63,42 +66,43 @@ class Game:
         # self._move_triangle_to_vao_buffer()
         # self._move_rect_to_vao()
         self._move_cube_to_vao()
-        self.shader_program = self._create_shaders()
-        self.active_shader_program = self.shader_program
+        self.active_shaders = self.shader_program = self._create_shaders()
         self.uniform_to_location = self._get_uniforms_locations()
-        self._set_transform_matrices(projection=matrices.perspective(
-            45, self.window_size[0] / self.window_size[1], 0.1, 100))
-        # glUniformMatrix4fv(
-        #     self.uniform_to_location['projection'], 1, GL_FALSE,
-        #     Matrix44.perspective_projection(80, 4 / 3, 0.1, 100, 'f4'))
+        self.active_keys = [False] * 1024
+        self.camera = Camera()
+        self.delta_time = 0
+        self.last_frame = 0
 
     def run(self):
+        self._set_transform_matrices(
+            projection=self.camera.get_projection(self.aspect_ratio, 80))
+
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
         glEnable(GL_DEPTH_TEST)
+        pygame.event.set_grab(True)
+        pygame.mouse.set_visible(False)
 
         face_texture = self._load_texture('textures/awesomeface.png')
         bricks_texture = self._load_texture('textures/container.jpg')
 
         while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    quit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        quit()
+            # self.mouse_last_pos = mouse_new_pos
+
+            self._pull_events()
+            self.calculate_delta_time()
+            self.camera.do_movement(self.active_keys, self.delta_time)
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             glBindVertexArray(self.vao_buffer)
 
             self._set_textures([bricks_texture, face_texture])
             self._set_uniforms()
+            self._set_transform_matrices(view=self.camera.get_view_matrix())
 
             for i, pos in enumerate(shapes.cubes_model_pose):
                 k = pygame.time.get_ticks() / 100
                 offsets = shapes.cubes_model_pose
                 self._set_transform_matrices(
-                    # view=matrices.translate(0, 0, -3.0),
-                    view=matrices.translate(0, 0, -3),
                     model=matrices.rotate_x(i * k) @
                           matrices.rotate_y(i * k) @
                           matrices.rotate_z(i * k) @
@@ -113,22 +117,31 @@ class Game:
 
             pygame.display.flip()
 
+    def calculate_delta_time(self):
+        current_frame = pygame.time.get_ticks()
+        self.delta_time = current_frame - self.last_frame
+        self.last_frame = current_frame
+
     @staticmethod
     def _get_look_at_matrix():
         radius = 10
-        cam_x = math.sin(pygame.time.get_ticks()) * radius
-        cam_z = math.cos(pygame.time.get_ticks()) * radius
-        return matrices.look_at([cam_x, 0, cam_z], [0, 0, 0], [0, 1, 0])
+        cam_x = math.sin(pygame.time.get_ticks() / 1000) * radius
+        cam_z = math.cos(pygame.time.get_ticks() / 1000) * radius
+        return Matrix44.look_at([cam_x, 0, cam_z], [0, 0, 0], [0, 1, 0],
+                                dtype='f4')
+        # return matrices.look_at(np.array([cam_x, 0, cam_z]),
+        #                          np.array([0, 0, 0]),
+        #                          np.array([0, 1, 0]))
 
     def _set_textures(self, textures: list):
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, textures[0])
-        glUniform1i(glGetUniformLocation(self.active_shader_program,
+        glUniform1i(glGetUniformLocation(self.active_shaders,
                                          "firstTexture"), 0)
 
         glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_2D, textures[1])
-        glUniform1i(glGetUniformLocation(self.active_shader_program,
+        glUniform1i(glGetUniformLocation(self.active_shaders,
                                          "secondTexture"), 1)
 
     def _set_uniforms(self):
@@ -160,15 +173,15 @@ class Game:
 
     def _get_uniforms_locations(self) -> dict:
         form2pos = {
-            'time': glGetUniformLocation(self.active_shader_program,
+            'time': glGetUniformLocation(self.active_shaders,
                                          'time'),
-            'resolution': glGetUniformLocation(self.active_shader_program,
+            'resolution': glGetUniformLocation(self.active_shaders,
                                                'resolution'),
-            'view': glGetUniformLocation(self.active_shader_program,
+            'view': glGetUniformLocation(self.active_shaders,
                                          'view'),
-            'model': glGetUniformLocation(self.active_shader_program,
+            'model': glGetUniformLocation(self.active_shaders,
                                           'model'),
-            'projection': glGetUniformLocation(self.active_shader_program,
+            'projection': glGetUniformLocation(self.active_shaders,
                                                'projection')
         }
 
@@ -270,7 +283,8 @@ class Game:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
@@ -288,6 +302,24 @@ class Game:
                 texture_surface.get_width(),
                 texture_surface.get_height()
                 )
+
+    def _pull_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit()
+            if event.type == pygame.MOUSEMOTION:
+                mouse_new_pos = pygame.mouse.get_rel()
+                self.camera.do_mouse_movement(mouse_new_pos[0],
+                                              -mouse_new_pos[1])
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    quit()
+                self.active_keys[event.key % 1024] = True
+            if event.type == pygame.KEYUP:
+                self.active_keys[event.key % 1024] = False
+
+    def init_mouse(self):
+        pass
 
 
 if __name__ == '__main__':
