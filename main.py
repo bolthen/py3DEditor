@@ -98,12 +98,13 @@ class Game:
                 offsets = shapes.cubes_model_pose
                 self._set_transform_matrices(
                     # view=matrices.translate(0, 0, -3.0),
-                    view=matrices.translate(offsets[i][0],
-                                            offsets[i][1],
-                                            offsets[i][2]),
+                    view=matrices.translate(0, 0, -3),
                     model=matrices.rotate_x(i * k) @
                           matrices.rotate_y(i * k) @
-                          matrices.rotate_z(i * k))
+                          matrices.rotate_z(i * k) @
+                          matrices.translate(offsets[i][0],
+                                             offsets[i][1],
+                                             offsets[i][2]))
                 glDrawArrays(GL_TRIANGLES, 0, 36)
 
             # glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
@@ -111,6 +112,13 @@ class Game:
             glBindVertexArray(0)
 
             pygame.display.flip()
+
+    @staticmethod
+    def _get_look_at_matrix():
+        radius = 10
+        cam_x = math.sin(pygame.time.get_ticks()) * radius
+        cam_z = math.cos(pygame.time.get_ticks()) * radius
+        return matrices.look_at([cam_x, 0, cam_z], [0, 0, 0], [0, 1, 0])
 
     def _set_textures(self, textures: list):
         glActiveTexture(GL_TEXTURE0)

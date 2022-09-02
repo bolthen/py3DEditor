@@ -123,3 +123,18 @@ def concatenate(matrix):
     if matrix.ndim > 1:
         return np.concatenate(matrix)
     return matrix
+
+
+def look_at(pos, direction, up):
+    right = np.cross(up, direction)
+    return np.array([
+        [right[0], right[1], right[2], 0],
+        [up[0], up[1], up[2], 0],
+        [direction[0], direction[1], direction[2], 0],
+        [0, 0, 0, 1]
+    ], dtype=np.float32) @ np.array([
+        [1, 0, 0, -pos[0]],
+        [0, 1, 0, -pos[1]],
+        [0, 0, 1, -pos[2]],
+        [0, 0, 0, 1]
+    ], dtype=np.float32)
