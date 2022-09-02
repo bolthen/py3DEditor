@@ -1,13 +1,18 @@
-#version 430
+#version 330 core
 
-out vec4 fragColor;
+out vec4 color;
 
-uniform float time;
+in vec3 ourColor;
+in vec2 ourTextureCoord;
+
+uniform sampler2D firstTexture;
+uniform sampler2D secondTexture;
 uniform vec2 resolution;
+uniform float time;
 
 void main()
 {
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
-    vec3 col = 0.5 + 0.5 * cos(time+uv.xyx + vec3(0,2,4));
-    fragColor = vec4(col,1.0);
+    color = mix(texture(firstTexture, ourTextureCoord),
+                texture(secondTexture, ourTextureCoord),
+                0.2f);
 }
