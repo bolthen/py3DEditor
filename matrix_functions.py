@@ -61,15 +61,15 @@ def rotate_axis(degree, x, y, z):
     a = math.radians(degree)
     cosa = math.cos(a)
     sina = math.sin(a)
-    m11 = x*x * (1 - cosa) + 1 * cosa
-    m22 = y*y * (1 - cosa) + 1 * cosa
-    m33 = z*z * (1 - cosa) + 1 * cosa
-    m12 = x*y * (1 - cosa) - z * sina
-    m13 = x*z * (1 - cosa) + y * sina
-    m21 = x*y * (1 - cosa) + z * sina
-    m23 = y*z * (1 - cosa) - x * sina
-    m31 = x*z * (1 - cosa) - y * sina
-    m32 = y*z * (1 - cosa) + x * sina
+    m11 = x * x * (1 - cosa) + 1 * cosa
+    m22 = y * y * (1 - cosa) + 1 * cosa
+    m33 = z * z * (1 - cosa) + 1 * cosa
+    m12 = x * y * (1 - cosa) - z * sina
+    m13 = x * z * (1 - cosa) + y * sina
+    m21 = x * y * (1 - cosa) + z * sina
+    m23 = y * z * (1 - cosa) - x * sina
+    m31 = x * z * (1 - cosa) - y * sina
+    m32 = y * z * (1 - cosa) + x * sina
     m14 = m24 = m34 = 0
     m41 = m42 = m43 = 0
     m44 = 1
@@ -123,3 +123,24 @@ def concatenate(matrix):
     if matrix.ndim > 1:
         return np.concatenate(matrix)
     return matrix
+
+
+def normalize_vec(vec):
+    norm = np.linalg.norm(vec)
+    if norm != 0:
+        return vec / norm
+    return vec
+
+
+def look_at(camera_position, camera_target, up_vector):
+    view = normalize_vec(camera_target)
+    right = normalize_vec(np.cross(up_vector, view))
+    vertical = np.cross(view, right)
+
+    return np.array([
+        [right[0], vertical[0], view[0], 0.0],
+        [right[1], vertical[1], view[1], 0.0],
+        [right[2], vertical[2], view[2], 0.0],
+        [-np.dot(right, camera_position), -np.dot(vertical, camera_position),
+         np.dot(view, camera_position), 1.0]
+    ])
