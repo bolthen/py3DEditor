@@ -41,6 +41,8 @@ in vec2 ourTextureCoord;
 
 uniform sampler2D firstTexture;
 uniform sampler2D secondTexture;
+uniform vec2 resolution;
+uniform float time;
 
 void main()
 {
@@ -65,7 +67,7 @@ class Game:
         self.active_shader_program = self.shader_program
         self.uniform_to_location = self._get_uniforms_locations()
         self._set_transform_matrices(projection=matrices.perspective(
-            80, self.window_size[0] / self.window_size[1], 0.1, 100))
+            45, self.window_size[0] / self.window_size[1], 0.1, 100))
         # glUniformMatrix4fv(
         #     self.uniform_to_location['projection'], 1, GL_FALSE,
         #     Matrix44.perspective_projection(80, 4 / 3, 0.1, 100, 'f4'))
@@ -93,7 +95,6 @@ class Game:
 
             for i, pos in enumerate(shapes.cubes_model_pose):
                 k = pygame.time.get_ticks() / 100
-                # rotation = matrices.rotate_axis(k, i * 5, i * 10, i)
                 offsets = shapes.cubes_model_pose
                 self._set_transform_matrices(
                     # view=matrices.translate(0, 0, -3.0),
@@ -124,7 +125,7 @@ class Game:
 
     def _set_uniforms(self):
         glUniform1f(self.uniform_to_location['time'],
-                    pygame.time.get_ticks() / 1000)
+                    pygame.time.get_ticks() / 100)
         glUniform2f(self.uniform_to_location['resolution'],
                     self.window_size[0], self.window_size[1])
 
@@ -261,7 +262,7 @@ class Game:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
