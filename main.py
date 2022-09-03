@@ -10,7 +10,7 @@ from camera import Camera
 
 class Game:
     def __init__(self):
-        self.window_size = (800, 600)
+        self.window_size = (1920, 1080)
         self._init_pygame()
         self.aspect_ratio = int(self.window_size[0] / self.window_size[1])
         self.vao_buffer = glGenVertexArrays(1)
@@ -18,7 +18,9 @@ class Game:
         self.ebo_buffer = glGenBuffers(1)
         # self._move_triangle_to_vao_buffer()
         # self._move_rect_to_vao()
-        self._move_cube_to_vao()
+        # self._move_cube_to_vao()
+        # self._move_object_from_file_to_vao('Tiger.obj')
+        self._move_object_from_file_to_vao('models/Tiger.obj')
         self.active_shader = self.shader_program = \
             Shader('programs/vertex_shader.glsl',
                    'programs/fragment_shader.glsl')
@@ -33,9 +35,10 @@ class Game:
 
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
         glEnable(GL_DEPTH_TEST)
+        self.active_shader.enable_wireframe()
 
-        face_texture = self._load_texture('textures/awesomeface.png')
-        bricks_texture = self._load_texture('textures/container.jpg')
+        # face_texture = self._load_texture('textures/awesomeface.png')
+        # bricks_texture = self._load_texture('textures/container.jpg')
 
         while True:
             self._pull_events()
@@ -45,11 +48,10 @@ class Game:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             glBindVertexArray(self.vao_buffer)
 
-            self._set_textures([bricks_texture, face_texture])
-            # self.active_shader.set_uniforms
+            # self._set_textures([bricks_texture, face_texture])
             self.active_shader.set_uniforms(view=self.camera.get_view_matrix())
 
-            for i, pos in enumerate(shapes.cubes_model_pose):
+            '''for i, pos in enumerate(shapes.cubes_model_pose):
                 k = pygame.time.get_ticks() / 100
                 offsets = shapes.cubes_model_pose
                 self.active_shader.set_uniforms(
@@ -60,12 +62,73 @@ class Game:
                                              offsets[i][1],
                                              offsets[i][2]))
                 glDrawArrays(GL_TRIANGLES, 0, 36)
-
-            # glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
+            '''
+            self.active_shader.set_uniforms(model=matrices.scale(3))
+            glDrawElements(GL_TRIANGLES, 150000, GL_UNSIGNED_INT, None)
 
             glBindVertexArray(0)
 
             pygame.display.flip()
+
+    def _move_object_from_file_to_vao(self, filename):
+        vertex, faces = [], []
+        with open(filename) as f:
+            for line in f:
+                if line.startswith('v '):
+                    vertex.append([float(i) for i in line.split()[1:]])
+                elif line.startswith('f'):
+                    faces_ = line.split()[1:]
+                    faces.append(
+                        [int(face_.split('/')[0]) - 1 for face_ in faces_])
+
+        vertices = np.array([np.array(v) for v in vertex], dtype=np.float32)
+        indices = np.array([np.array(face) for face in faces], dtype=np.uint32)
+        vertices[(vertices > 2) | (vertices < -2)] = 0
+        vertices = np.concatenate(vertices)
+        indices = np.concatenate(indices)
+        # vertices = shapes.rect
+        # indices = shapes.rect_indices
+        # vertices = shapes.rect2
+        # indices = shapes.rect_indices
+
+        glBindVertexArray(self.vao_buffer)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo_buffer)
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo_buffer)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * vertices.itemsize,
+                              ctypes.c_void_p(0))
+
+        glEnableVertexAttribArray(0)
+
+        glBindVertexArray(0)
+
+    def _move_rect_to_vao(self):
+        vertices = shapes.rect
+        indices = shapes.rect_indices
+        glBindVertexArray(self.vao_buffer)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo_buffer)
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo_buffer)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
+                              ctypes.c_void_p(0))
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
+                              ctypes.c_void_p(3 * vertices.itemsize))
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
+                              ctypes.c_void_p(6 * vertices.itemsize))
+
+        glEnableVertexAttribArray(0)
+        glEnableVertexAttribArray(1)
+        glEnableVertexAttribArray(2)
+
+        glBindVertexArray(0)
 
     def calculate_delta_time(self):
         current_frame = pygame.time.get_ticks()
@@ -103,29 +166,6 @@ class Game:
 
         glBindVertexArray(0)
 
-    def _move_rect_to_vao(self):
-        vertices = shapes.rect
-        indices = shapes.rect_indices
-        glBindVertexArray(self.vao_buffer)
-
-        glBindBuffer(GL_ARRAY_BUFFER, self.vbo_buffer)
-        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ebo_buffer)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
-                              ctypes.c_void_p(0))
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
-                              ctypes.c_void_p(3 * vertices.itemsize))
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
-                              ctypes.c_void_p(6 * vertices.itemsize))
-
-        glEnableVertexAttribArray(0)
-        glEnableVertexAttribArray(1)
-        glEnableVertexAttribArray(2)
-
-        glBindVertexArray(0)
 
     def _move_triangle_to_vao_buffer(self):
         glBindVertexArray(self.vao_buffer)

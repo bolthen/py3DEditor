@@ -12,7 +12,8 @@ uniform float time;
 
 void main()
 {
-    color = mix(texture(firstTexture, ourTextureCoord),
-                texture(secondTexture, ourTextureCoord),
-                0.2f);
+    //color = mix(texture(firstTexture, ourTextureCoord),
+    //            texture(secondTexture, ourTextureCoord),
+    //            0.2f);
+    color = vec4(0.0f, 0.2f, 0.2f, 1.0f);
 }

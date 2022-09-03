@@ -17,7 +17,7 @@ class Camera:
         self.up = np.array([0, 1, 0], dtype=np.float32)
         self.yaw = -90
         self.pitch = 0
-        self.mouse_sensitivity = 0.05
+        self.mouse_sensitivity = 0.03
 
 
     def get_view_matrix(self):
@@ -33,7 +33,7 @@ class Camera:
                                                max_distance, 'f4')
 
     def do_movement(self, active_keys, delta_time):
-        camera_speed = 0.01
+        camera_speed = 0.001
 
         if active_keys[pygame.K_w % 1024]:
             self.pos += camera_speed * self.view_dir * delta_time
