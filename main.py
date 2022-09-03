@@ -135,7 +135,7 @@ class Game:
 
     def calculate_delta_time(self):
         current_frame = pygame.time.get_ticks()
-        self.delta_time = current_frame - self.last_frame
+        self.delta_time = (current_frame - self.last_frame) / 1000
         self.last_frame = current_frame
 
     def _set_textures(self, textures: list):
