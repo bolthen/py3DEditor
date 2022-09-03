@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 
-def translate(tx, ty, tz):
+def translate(tx: float, ty: float, tz: float) -> np.ndarray:
     return np.array([
         [1, 0, 0, 0],
         [0, 1, 0, 0],
@@ -11,7 +11,7 @@ def translate(tx, ty, tz):
     ], dtype=np.float32)
 
 
-def rotate_x(degree):
+def rotate_x(degree: float) -> np.ndarray:
     a = math.radians(degree)
     m22 = math.cos(a)
     m23 = -math.sin(a)
@@ -25,7 +25,7 @@ def rotate_x(degree):
     ], dtype=np.float32)
 
 
-def rotate_y(degree):
+def rotate_y(degree: float) -> np.ndarray:
     a = math.radians(degree)
     m11 = math.cos(a)
     m13 = math.sin(a)
@@ -39,7 +39,7 @@ def rotate_y(degree):
     ], dtype=np.float32)
 
 
-def rotate_z(degree):
+def rotate_z(degree: float) -> np.ndarray:
     a = math.radians(degree)
     m11 = math.cos(a)
     m12 = -math.sin(a)
@@ -53,7 +53,7 @@ def rotate_z(degree):
     ], dtype=np.float32)
 
 
-def rotate_axis(degree, x, y, z):
+def rotate_axis(degree, x, y, z) -> np.ndarray:
     maxx = max(x, y, z)
     x = x / maxx
     y = y / maxx
@@ -81,7 +81,7 @@ def rotate_axis(degree, x, y, z):
     ], dtype=np.float32)
 
 
-def scale(n):
+def scale(n: float) -> np.ndarray:
     return np.array([
         [n, 0, 0, 0],
         [0, n, 0, 0],
@@ -90,7 +90,8 @@ def scale(n):
     ], dtype=np.float32)
 
 
-def perspective(fov, aspect_ratio, near_plane, far_plane):
+def perspective(fov: float, aspect_ratio: float,
+                near_plane: float, far_plane: float) -> np.ndarray:
     m21 = 1.0 / np.tan(fov / 2.0)
     m11 = m21 / aspect_ratio
     m33 = far_plane / (near_plane - far_plane)
@@ -104,7 +105,8 @@ def perspective(fov, aspect_ratio, near_plane, far_plane):
     ], dtype=np.float32)
 
 
-def orthographic(left, right, bottom, top, near_plane, far_plane):
+def orthographic(left: int, right: int, bottom: int, top: int,
+                 near_plane: float, far_plane: float) -> np.ndarray:
     m11 = 2 / (right - left)
     m14 = - ((right + left) / (right - left))
     m22 = 2 / (top - bottom)
@@ -125,14 +127,16 @@ def concatenate(matrix):
     return matrix
 
 
-def normalize_vec(vec):
+def normalize_vec(vec: np.ndarray) -> np.ndarray:
     norm = np.linalg.norm(vec)
     if norm != 0:
         return vec / norm
     return vec
 
 
-def look_at(camera_position, camera_target, up_vector):
+def look_at(camera_position: np.ndarray,
+            camera_target: np.ndarray,
+            up_vector: np.ndarray) -> np.ndarray:
     view = normalize_vec(camera_target)
     right = normalize_vec(np.cross(up_vector, view))
     vertical = np.cross(view, right)

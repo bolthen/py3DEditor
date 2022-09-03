@@ -66,6 +66,13 @@ rect = np.array([
     -0.5, 0.5, 0.0,   0.0, 0.0, 0.0,   0.0, 1.0
 ], dtype=np.float32)
 
+rect2 = np.array([
+    0.5,  0.5, 0.0,
+    0.5, -0.5, 0.0,
+    -0.5, -0.5, 0.0,
+    -0.5, 0.5, 0.0
+], dtype=np.float32)
+
 rect_indices = np.array([
     0, 1, 3,
     1, 2, 3
