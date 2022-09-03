@@ -8,6 +8,9 @@ from pyrr import Matrix44
 
 
 class Camera:
+    FOV_MIN = 1
+    FOV_MAX = 140
+
     def __init__(self,
                  start_view=np.array([0, 0, -1], dtype=np.float32),
                  start_pos=np.array([0, 0, 3], dtype=np.float32),
@@ -18,18 +21,27 @@ class Camera:
         self.yaw = -90
         self.pitch = 0
         self.mouse_sensitivity = 0.03
+        self.wheel_sensitivity = 3
+        self._fov = 45
 
+    @property
+    def fov(self):
+        return self._fov
+
+    @fov.setter
+    def fov(self, value):
+        self._fov = int(self._clamp(value, self.FOV_MIN, self.FOV_MAX))
 
     def get_view_matrix(self):
         # return matrices.look_at(self.pos, self.pos + self.view_dir, self.up)
         return Matrix44.look_at(self.pos, self.pos + self.view_dir, self.up,
                                 dtype='f4')
 
-    @staticmethod
-    def get_projection(aspect, fov, min_distance=0.1, max_distance=100):
+    def get_projection(self, aspect, min_distance=0.1, max_distance=100):
         # return matrices.perspective(fov, int(aspect),
         #                             min_distance, max_distance)
-        return Matrix44.perspective_projection(fov, int(aspect), min_distance,
+        return Matrix44.perspective_projection(self.fov, int(aspect),
+                                               min_distance,
                                                max_distance, 'f4')
 
     def do_movement(self, active_keys, delta_time):
@@ -39,10 +51,10 @@ class Camera:
             self.pos += camera_speed * self.view_dir * delta_time
         if active_keys[pygame.K_s % 1024]:
             self.pos -= camera_speed * self.view_dir * delta_time
-        if active_keys[pygame.K_LSHIFT % 1024]:
+        if active_keys[pygame.K_q % 1024]:
             self.pos += camera_speed * \
                         np.array([0, -1, 0], dtype=np.float32) * delta_time
-        if active_keys[pygame.K_SPACE % 1024]:
+        if active_keys[pygame.K_e % 1024]:
             self.pos += camera_speed * \
                         np.array([0, 1, 0], dtype=np.float32) * delta_time
         if active_keys[pygame.K_a % 1024]:

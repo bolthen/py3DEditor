@@ -30,8 +30,7 @@ class Game:
         self.last_frame = 0
 
     def run(self):
-        self.active_shader.set_uniforms(
-            projection=self.camera.get_projection(self.aspect_ratio, 45))
+        self._update_projection_matrix()
 
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
         glEnable(GL_DEPTH_TEST)
@@ -69,6 +68,10 @@ class Game:
             glBindVertexArray(0)
 
             pygame.display.flip()
+
+    def _update_projection_matrix(self):
+        self.active_shader.set_uniforms(
+            projection=self.camera.get_projection(self.aspect_ratio))
 
     def _move_object_from_file_to_vao(self, filename):
         vertex, faces = [], []
@@ -166,7 +169,6 @@ class Game:
 
         glBindVertexArray(0)
 
-
     def _move_triangle_to_vao_buffer(self):
         glBindVertexArray(self.vao_buffer)
         self._move_vertexes_to_vbo([
@@ -223,6 +225,12 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == pygame.BUTTON_WHEELDOWN:
+                    self.camera.fov += self.camera.wheel_sensitivity
+                elif event.button == pygame.BUTTON_WHEELUP:
+                    self.camera.fov -= self.camera.wheel_sensitivity
+                self._update_projection_matrix()
             if event.type == pygame.MOUSEMOTION:
                 mouse_new_pos = pygame.mouse.get_rel()
                 self.camera.do_mouse_movement(mouse_new_pos[0],
@@ -233,9 +241,6 @@ class Game:
                 self.active_keys[event.key % 1024] = True
             if event.type == pygame.KEYUP:
                 self.active_keys[event.key % 1024] = False
-
-    def init_mouse(self):
-        pass
 
 
 if __name__ == '__main__':
