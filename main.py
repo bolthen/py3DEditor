@@ -12,7 +12,7 @@ from camera import Camera
 
 class Game:
     def __init__(self):
-        self.window_size = (1920, 1080)
+        self.window_size = (800, 600)
         self._init_pygame()
         self.aspect_ratio = self.window_size[0] / self.window_size[1]
         self.vao_buffer = glGenVertexArrays(1)
@@ -39,8 +39,8 @@ class Game:
         glEnable(GL_DEPTH_TEST)
         # self.active_shader.enable_wireframe()
 
-        # face_texture = self._load_texture('textures/awesomeface.png')
-        # bricks_texture = self._load_texture('textures/container.jpg')
+        face_texture = self._load_texture('textures/awesomeface.png')
+        bricks_texture = self._load_texture('textures/container.jpg')
 
         while True:
             self._pull_events()
@@ -65,8 +65,7 @@ class Game:
                                              offsets[i][2]))
                 glDrawArrays(GL_TRIANGLES, 0, 36)
             '''
-            self.active_shader.set_uniforms(model=matrices.scale(0.3) @
-                                                  matrices.rotate_x(90))
+            self.active_shader.set_uniforms(model=matrices.scale(1))
             self.model.draw(self.active_shader)
             # glDrawArrays(GL_TRIANGLES, 0, 150000)
             # glDrawElements(GL_TRIANGLES, 150000, GL_UNSIGNED_INT, None)

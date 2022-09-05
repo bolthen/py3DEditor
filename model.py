@@ -17,7 +17,7 @@ import numpy as np
 
 class Model:
     def __init__(self, path: str):
-        self.path = path
+        self.path = str.join('/', path.split('/')[0:-1])
         self.meshes = []
         self.scene = None
         self._load_model(path)
@@ -38,13 +38,15 @@ class Model:
             '''
 
         for mesh in self.scene.mesh_list:
-            vertices = []
-            for material in mesh.materials:
-                tmp = material.texture
-                vertices += material.vertices
+            materials = []
+            for i, material in enumerate(mesh.materials):
+                mat = Material(material.vertices, i,
+                               self.path + '/' + material.texture.file_name)
+                materials.append(mat)
+
             self.meshes.append(
                 Mesh(
-                    np.array(vertices, dtype=np.float32),
+                    materials,
                     concatenate(np.array(mesh.faces, dtype=np.uint32))
                 )
             )
