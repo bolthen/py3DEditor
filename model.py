@@ -17,20 +17,36 @@ import numpy as np
 
 class Model:
     def __init__(self, path: str):
-        self.path = path
+        self.path = str.join('/', path.split('/')[0:-1])
         self.meshes = []
         self.scene = None
         self._load_model(path)
 
     def _load_model(self, path: str):
-        self.scene = Wavefront(path, collect_faces=True)
+        self.scene = Wavefront(path, collect_faces=True, create_materials=True)
         self._load_meshes()
 
     def _load_meshes(self):
+        '''
         for mesh in self.scene.mesh_list:
             self.meshes.append(
                 Mesh(
-                    np.array(mesh.materials[0].vertices, dtype=np.float32),
+                    concatenate(np.array(self.scene.vertices, dtype=np.float32)),
+                    concatenate(np.array(mesh.faces, dtype=np.uint32))
+                )
+            )
+            '''
+
+        for mesh in self.scene.mesh_list:
+            materials = []
+            for i, material in enumerate(mesh.materials):
+                mat = Material(material.vertices, i,
+                               self.path + '/' + material.texture.file_name)
+                materials.append(mat)
+
+            self.meshes.append(
+                Mesh(
+                    materials,
                     concatenate(np.array(mesh.faces, dtype=np.uint32))
                 )
             )

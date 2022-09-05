@@ -8,7 +8,7 @@ from pyrr import Matrix44
 
 
 class _MovementSystem:
-    def __init__(self, resistance_force=0.01, mass=80, speed=10):
+    def __init__(self, resistance_force=0.05, mass=80, speed=10):
         self._mass = mass
         self._resistance = resistance_force
         self._speed = speed

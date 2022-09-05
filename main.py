@@ -12,7 +12,7 @@ from camera import Camera
 
 class Game:
     def __init__(self):
-        self.window_size = (1920, 1080)
+        self.window_size = (800, 600)
         self._init_pygame()
         self.aspect_ratio = self.window_size[0] / self.window_size[1]
         self.vao_buffer = glGenVertexArrays(1)
@@ -22,8 +22,8 @@ class Game:
         # self._move_rect_to_vao()
         # self._move_cube_to_vao()
         # self._move_object_from_file_to_vao('Tiger.obj')
-        self._move_object_from_file_to_vao('models/Tiger 131.obj')
-        # self.model = Model('models/Tiger 131.obj')
+        # self._move_object_from_file_to_vao('models/Tiger 131.obj')
+        self.model = Model('models/Tiger 131/Tiger 131.obj')
         self.active_shader = self.shader_program = \
             Shader('programs/vertex_shader.glsl',
                    'programs/fragment_shader.glsl')
@@ -37,10 +37,10 @@ class Game:
 
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
         glEnable(GL_DEPTH_TEST)
-        self.active_shader.enable_wireframe()
+        # self.active_shader.enable_wireframe()
 
-        # face_texture = self._load_texture('textures/awesomeface.png')
-        # bricks_texture = self._load_texture('textures/container.jpg')
+        face_texture = self._load_texture('textures/awesomeface.png')
+        bricks_texture = self._load_texture('textures/container.jpg')
 
         while True:
             self._pull_events()
@@ -48,7 +48,7 @@ class Game:
             self.camera.do_movement(self.active_keys, self.delta_time)
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            glBindVertexArray(self.vao_buffer)
+            # glBindVertexArray(self.vao_buffer)
 
             # self._set_textures([bricks_texture, face_texture])
             self.active_shader.set_uniforms(view=self.camera.get_view_matrix())
@@ -65,13 +65,12 @@ class Game:
                                              offsets[i][2]))
                 glDrawArrays(GL_TRIANGLES, 0, 36)
             '''
-            self.active_shader.set_uniforms(model=matrices.scale(3))
-
-            # self.model.draw(self.active_shader)
+            self.active_shader.set_uniforms(model=matrices.scale(1))
+            self.model.draw(self.active_shader)
             # glDrawArrays(GL_TRIANGLES, 0, 150000)
-            glDrawElements(GL_TRIANGLES, 150000, GL_UNSIGNED_INT, None)
+            # glDrawElements(GL_TRIANGLES, 150000, GL_UNSIGNED_INT, None)
 
-            glBindVertexArray(0)
+            # glBindVertexArray(0)
 
             pygame.display.flip()
 
@@ -94,6 +93,9 @@ class Game:
         vertices = np.concatenate(vertex, dtype=np.float32)
         # indices = np.array([np.array(face) for face in faces], dtype=np.uint32)
         indices = np.concatenate(faces)
+        model = Model('models/Tiger 131.obj')
+        vertices = model.meshes[0].vertices
+        indices = model.meshes[0].indices
         # vertices[(vertices > 2) | (vertices < -2)] = 0
         # vertices = np.concatenate(vertices)
         # indices = np.concatenate(indices)
@@ -152,6 +154,8 @@ class Game:
         current_frame = pygame.time.get_ticks()
         self.delta_time = (current_frame - self.last_frame) / 1000
         self.last_frame = current_frame
+        fps = pygame.time.Clock()
+        fps.tick(144)
 
     def _set_textures(self, textures: list):
         glActiveTexture(GL_TEXTURE0)
