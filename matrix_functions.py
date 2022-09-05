@@ -54,6 +54,11 @@ def rotate_z(degree: float) -> np.ndarray:
 
 
 def rotate_axis(degree, x, y, z) -> np.ndarray:
+    axis = np.array([x, y, z])
+    axis = normalize_vec(axis)
+    x = axis[0]
+    y = axis[1]
+    z = axis[2]
     maxx = max(x, y, z)
     x = x / maxx
     y = y / maxx

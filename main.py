@@ -66,7 +66,7 @@ class Game:
                 glDrawArrays(GL_TRIANGLES, 0, 36)
             '''
             self.active_shader.set_uniforms(model=matrices.scale(3))
-
+            # self.model.draw(self.active_shader)
             # self.model.draw(self.active_shader)
             # glDrawArrays(GL_TRIANGLES, 0, 150000)
             glDrawElements(GL_TRIANGLES, 150000, GL_UNSIGNED_INT, None)
@@ -94,6 +94,9 @@ class Game:
         vertices = np.concatenate(vertex, dtype=np.float32)
         # indices = np.array([np.array(face) for face in faces], dtype=np.uint32)
         indices = np.concatenate(faces)
+        model = Model('models/Tiger 131.obj')
+        vertices = model.meshes[0].vertices
+        indices = model.meshes[0].indices
         # vertices[(vertices > 2) | (vertices < -2)] = 0
         # vertices = np.concatenate(vertices)
         # indices = np.concatenate(indices)
@@ -152,6 +155,8 @@ class Game:
         current_frame = pygame.time.get_ticks()
         self.delta_time = (current_frame - self.last_frame) / 1000
         self.last_frame = current_frame
+        fps = pygame.time.Clock()
+        fps.tick(144)
 
     def _set_textures(self, textures: list):
         glActiveTexture(GL_TEXTURE0)

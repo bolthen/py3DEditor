@@ -30,10 +30,19 @@ class Model:
         for mesh in self.scene.mesh_list:
             self.meshes.append(
                 Mesh(
+                    concatenate(np.array(self.scene.vertices, dtype=np.float32)),
+                    concatenate(np.array(mesh.faces, dtype=np.uint32))
+                )
+            )
+        '''
+        for mesh in self.scene.mesh_list:
+            self.meshes.append(
+                Mesh(
                     np.array(mesh.materials[0].vertices, dtype=np.float32),
                     concatenate(np.array(mesh.faces, dtype=np.uint32))
                 )
             )
+        '''
 
     def draw(self, shader: Shader):
         for mesh in self.meshes:
