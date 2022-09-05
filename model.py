@@ -23,10 +23,11 @@ class Model:
         self._load_model(path)
 
     def _load_model(self, path: str):
-        self.scene = Wavefront(path, collect_faces=True)
+        self.scene = Wavefront(path, collect_faces=True, create_materials=True)
         self._load_meshes()
 
     def _load_meshes(self):
+        '''
         for mesh in self.scene.mesh_list:
             self.meshes.append(
                 Mesh(
@@ -34,15 +35,19 @@ class Model:
                     concatenate(np.array(mesh.faces, dtype=np.uint32))
                 )
             )
-        '''
+            '''
+
         for mesh in self.scene.mesh_list:
+            vertices = []
+            for material in mesh.materials:
+                tmp = material.texture
+                vertices += material.vertices
             self.meshes.append(
                 Mesh(
-                    np.array(mesh.materials[0].vertices, dtype=np.float32),
+                    np.array(vertices, dtype=np.float32),
                     concatenate(np.array(mesh.faces, dtype=np.uint32))
                 )
             )
-        '''
 
     def draw(self, shader: Shader):
         for mesh in self.meshes:

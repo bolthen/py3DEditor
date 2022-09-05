@@ -22,8 +22,8 @@ class Game:
         # self._move_rect_to_vao()
         # self._move_cube_to_vao()
         # self._move_object_from_file_to_vao('Tiger.obj')
-        self._move_object_from_file_to_vao('models/Tiger 131.obj')
-        # self.model = Model('models/Tiger 131.obj')
+        # self._move_object_from_file_to_vao('models/Tiger 131.obj')
+        self.model = Model('models/Tiger 131/Tiger 131.obj')
         self.active_shader = self.shader_program = \
             Shader('programs/vertex_shader.glsl',
                    'programs/fragment_shader.glsl')
@@ -37,7 +37,7 @@ class Game:
 
         glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
         glEnable(GL_DEPTH_TEST)
-        self.active_shader.enable_wireframe()
+        # self.active_shader.enable_wireframe()
 
         # face_texture = self._load_texture('textures/awesomeface.png')
         # bricks_texture = self._load_texture('textures/container.jpg')
@@ -48,7 +48,7 @@ class Game:
             self.camera.do_movement(self.active_keys, self.delta_time)
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            glBindVertexArray(self.vao_buffer)
+            # glBindVertexArray(self.vao_buffer)
 
             # self._set_textures([bricks_texture, face_texture])
             self.active_shader.set_uniforms(view=self.camera.get_view_matrix())
@@ -65,13 +65,13 @@ class Game:
                                              offsets[i][2]))
                 glDrawArrays(GL_TRIANGLES, 0, 36)
             '''
-            self.active_shader.set_uniforms(model=matrices.scale(3))
-            # self.model.draw(self.active_shader)
-            # self.model.draw(self.active_shader)
+            self.active_shader.set_uniforms(model=matrices.scale(0.3) @
+                                                  matrices.rotate_x(90))
+            self.model.draw(self.active_shader)
             # glDrawArrays(GL_TRIANGLES, 0, 150000)
-            glDrawElements(GL_TRIANGLES, 150000, GL_UNSIGNED_INT, None)
+            # glDrawElements(GL_TRIANGLES, 150000, GL_UNSIGNED_INT, None)
 
-            glBindVertexArray(0)
+            # glBindVertexArray(0)
 
             pygame.display.flip()
 
