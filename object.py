@@ -1,4 +1,7 @@
+import pyassimp
 
+scene = pyassimp.load()
+scene.meshes
 
 
 class Object:

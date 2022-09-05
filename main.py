@@ -2,8 +2,10 @@ import math
 import pygame
 import numpy as np
 import shapes
+import object_loader
 from shader import Shader
 from OpenGL.GL import *
+from model import *
 import matrix_functions as matrices
 from camera import Camera
 
@@ -12,7 +14,7 @@ class Game:
     def __init__(self):
         self.window_size = (1920, 1080)
         self._init_pygame()
-        self.aspect_ratio = int(self.window_size[0] / self.window_size[1])
+        self.aspect_ratio = self.window_size[0] / self.window_size[1]
         self.vao_buffer = glGenVertexArrays(1)
         self.vbo_buffer = glGenBuffers(1)
         self.ebo_buffer = glGenBuffers(1)
@@ -20,7 +22,8 @@ class Game:
         # self._move_rect_to_vao()
         # self._move_cube_to_vao()
         # self._move_object_from_file_to_vao('Tiger.obj')
-        self._move_object_from_file_to_vao('models/Tiger.obj')
+        self._move_object_from_file_to_vao('models/Tiger 131.obj')
+        # self.model = Model('models/Tiger 131.obj')
         self.active_shader = self.shader_program = \
             Shader('programs/vertex_shader.glsl',
                    'programs/fragment_shader.glsl')
@@ -63,6 +66,9 @@ class Game:
                 glDrawArrays(GL_TRIANGLES, 0, 36)
             '''
             self.active_shader.set_uniforms(model=matrices.scale(3))
+
+            # self.model.draw(self.active_shader)
+            # glDrawArrays(GL_TRIANGLES, 0, 150000)
             glDrawElements(GL_TRIANGLES, 150000, GL_UNSIGNED_INT, None)
 
             glBindVertexArray(0)
@@ -84,11 +90,17 @@ class Game:
                     faces.append(
                         [int(face_.split('/')[0]) - 1 for face_ in faces_])
 
-        vertices = np.array([np.array(v) for v in vertex], dtype=np.float32)
-        indices = np.array([np.array(face) for face in faces], dtype=np.uint32)
-        vertices[(vertices > 2) | (vertices < -2)] = 0
-        vertices = np.concatenate(vertices)
-        indices = np.concatenate(indices)
+        # vertices = np.array([np.array(v) for v in vertex], dtype=np.float32)
+        vertices = np.concatenate(vertex, dtype=np.float32)
+        # indices = np.array([np.array(face) for face in faces], dtype=np.uint32)
+        indices = np.concatenate(faces)
+        # vertices[(vertices > 2) | (vertices < -2)] = 0
+        # vertices = np.concatenate(vertices)
+        # indices = np.concatenate(indices)
+
+        # indices, vertices = object_loader.ObjLoader.load_model2(filename)
+        # vertices[(vertices > 2) | (vertices < -2)] = 0
+        # vertices = np.concatenate(vertices)
         # vertices = shapes.rect
         # indices = shapes.rect_indices
         # vertices = shapes.rect2
@@ -104,6 +116,9 @@ class Game:
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * vertices.itemsize,
                               ctypes.c_void_p(0))
+
+        # glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * vertices.itemsize,
+        #                       ctypes.c_void_p(3 * vertices.itemsize))
 
         glEnableVertexAttribArray(0)
 
