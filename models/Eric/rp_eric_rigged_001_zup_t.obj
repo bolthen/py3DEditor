@@ -2,7 +2,7 @@
 # Copyright 2004-2022 Aspose Pty Ltd.
 # File created: 09/05/2022 12:46:42
 
-mtllib material.lib
+mtllib material.mtl
 
 #
 # object rp_eric_rigged_001_geo

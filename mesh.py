@@ -1,6 +1,5 @@
 import numpy as np
 import pygame
-from OpenGL.GL import *
 from shader import *
 
 
@@ -32,7 +31,7 @@ class Texture:
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                         GL_LINEAR_MIPMAP_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                      GL_UNSIGNED_BYTE, image)
@@ -67,8 +66,6 @@ class Material:
         '''
 
         self.vertices = vertices
-        # for i in range(len(self.vertices) // 8):
-        #     self.vertices[i * 8 + 1] += 1
         self.model_idx = model_idx
         self.texture = Texture(model_idx, texture_name)
 

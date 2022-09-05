@@ -1,0 +1,19 @@
+# Aspose.3D Wavefront OBJ Exporter
+# Copyright 2004-2022 Aspose Pty Ltd.
+# File created: 09/05/2022 12:46:42
+
+newmtl rp_eric_rigged_001_mat
+	Ns 64.9185
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 16.0000 16.0000 16.0000
+	Kd 56.0000 56.0000 56.0000
+	Ks 0.0700 0.0700 0.0700
+	Ke 0.0000 0.0000 0.0000
+	map_Ka D:\MoW AS2 Modding\Modelling 3ds Max\Tiger 131\G136_Tiger_131\rp_eric_rigged_001_dif.jpg
+	map_Kd D:\MoW AS2 Modding\Modelling 3ds Max\Tiger 131\G136_Tiger_131\rp_eric_rigged_001_dif.jpg
+	map_bump D:\MoW AS2 Modding\Modelling 3ds Max\Tiger 131\G136_Tiger_131\Tiger_131_chassis_01_ANM.png
+	bump D:\MoW AS2 Modding\Modelling 3ds Max\Tiger 131\G136_Tiger_131\Tiger_131_chassis_01_ANM.png
