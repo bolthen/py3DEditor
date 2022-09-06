@@ -1,11 +1,3 @@
-"""
-vertices = self.scene.vertices
-faces = self.scene.mesh_list[0].faces
-format_ = self.scene.mesh_list[0].materials[0].vertex_format
-vertices2 = self.scene.mesh_list[0].materials[0].vertices
-b = 2
-"""
-
 from pywavefront import *
 
 from mesh import *
@@ -27,29 +19,18 @@ class Model:
         self._load_meshes()
 
     def _load_meshes(self):
-        '''
-        for mesh in self.scene.mesh_list:
-            self.meshes.append(
-                Mesh(
-                    concatenate(np.array(self.scene.vertices, dtype=np.float32)),
-                    concatenate(np.array(mesh.faces, dtype=np.uint32))
-                )
-            )
-            '''
-
         for mesh in self.scene.mesh_list:
             materials = []
             for i, material in enumerate(mesh.materials):
-                mat = Material(material.vertices, i,
-                               self.path + '/' + material.texture.file_name)
+                texture_name = ''
+                if material.texture is not None:
+                    texture_name = self.path + '/' + material.texture.file_name
+                mat = Material(material.vertices, i, texture_name)
                 materials.append(mat)
 
             self.meshes.append(
-                Mesh(
-                    materials,
-                    concatenate(np.array(mesh.faces, dtype=np.uint32))
-                )
-            )
+                Mesh(materials,
+                     concatenate(np.array(mesh.faces, dtype=np.uint32))))
 
     def draw(self, shader: Shader):
         for mesh in self.meshes:
