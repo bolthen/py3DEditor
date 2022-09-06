@@ -22,8 +22,10 @@ class Model:
         for mesh in self.scene.mesh_list:
             materials = []
             for i, material in enumerate(mesh.materials):
-                mat = Material(material.vertices, i,
-                               self.path + '/' + material.texture.file_name)
+                texture_name = ''
+                if material.texture is not None:
+                    texture_name = self.path + '/' + material.texture.file_name
+                mat = Material(material.vertices, i, texture_name)
                 materials.append(mat)
 
             self.meshes.append(

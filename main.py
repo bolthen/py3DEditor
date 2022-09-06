@@ -8,8 +8,7 @@ class Game:
         self.window_size = (1920, 1080)
         self._init_pygame()
         self.aspect_ratio = self.window_size[0] / self.window_size[1]
-        # self.model = Model('models/Tiger 131/Tiger 131.obj')
-        self.model = Model('models/Tiger Animal/smilodon.obj')
+        self.model = Model('models/Eric/rp_eric_rigged_001_zup_t.obj')
         # self.model = Model('models/Eric/rp_eric_rigged_001_zup_t.obj')
         self.active_shader = self.shader_program = \
             Shader('programs/vertex_shader.glsl',
@@ -34,7 +33,7 @@ class Game:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
             self.active_shader.set_uniforms(view=self.camera.get_view_matrix())
-            self.active_shader.set_uniforms(model=matrices.scale(0.03))
+            self.active_shader.set_uniforms(model=matrices.scale(0.3) @ matrices.rotate_x(90))
 
             self.model.draw(self.active_shader)
 

@@ -3,22 +3,13 @@ import pygame
 from shader import *
 
 
-class Vertex:
-    STRUCT_SIZE = 32
-
-    def __init__(self, pos=np.array([], dtype=np.float32),
-                 normal=np.array([], dtype=np.float32),
-                 tex_coord=np.array([], dtype=np.float32)):
-        self.pos = pos
-        self.normal = normal
-        self.tex_coord = tex_coord
-
-
 class Texture:
     def __init__(self, id_: int, texture_name: str):
         self.id = id_
         self.name = texture_name
-        self.texture = self._load_texture()
+        self.texture = None
+        if texture_name != '':
+            self.texture = self._load_texture()
 
     def _load_texture(self):
         image, width, height = self._get_texture_data(self.name)
@@ -52,6 +43,8 @@ class Texture:
                 )
 
     def activate(self, shader: Shader, texture_var_name: str):
+        if self.name == '':
+            return
         glActiveTexture(GL_TEXTURE0 + self.id)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         glUniform1i(glGetUniformLocation(shader.program, texture_var_name),
