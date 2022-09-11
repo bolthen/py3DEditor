@@ -1,0 +1,21 @@
+# Aspose.3D Wavefront OBJ Exporter
+# Copyright 2004-2022 Aspose Pty Ltd.
+# File created: 09/06/2022 14:06:05
+
+newmtl Metal
+	Ka 0.2 0.2 0.2
+	Kd 1 1 1
+	d 1
+	Tr 0
+	illum 2
+	Ks 0.2 0.2 0.2
+	Ns 20
+	map_Kd Lamp_Metal_BaseColor.png
+newmtl Black
+	Ka 0.2 0.2 0.2
+	Kd 0.03049010038375854 0.03049010038375854 0.03049010038375854
+	d 1
+	Tr 0
+	illum 2
+	Ks 0.2 0.2 0.2
+	Ns 20

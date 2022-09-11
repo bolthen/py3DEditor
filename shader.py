@@ -1,6 +1,7 @@
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileShader, compileProgram
 from matrix_functions import concatenate
+import numpy as np
 
 
 class ShaderException(Exception):
@@ -33,25 +34,54 @@ class Shader:
         'projection' - camera FOV: perspective or orthographic\n
         'view' - view_matrix
         """
-        if 'time' in kwargs.keys():
+        glUseProgram(self.program)
+
+        if 'time' in kwargs.keys() and \
+                self._uniform_to_location['time'] != -1:
             glUniform1f(self._uniform_to_location['time'],
                         kwargs['time'])
 
-        if 'resolution' in kwargs.keys():
+        if 'resolution' in kwargs.keys() and \
+                self._uniform_to_location['resolution'] != -1:
             glUniform2f(self._uniform_to_location['resolution'],
                         kwargs['resolution'][0], kwargs['resolution'][1])
 
-        if 'projection' in kwargs.keys():
+        if 'projection' in kwargs.keys() and \
+                self._uniform_to_location['projection'] != -1:
             glUniformMatrix4fv(self._uniform_to_location['projection'], 1,
                                GL_FALSE, concatenate(kwargs['projection']))
 
-        if 'model' in kwargs.keys():
+        if 'model' in kwargs.keys() and \
+                self._uniform_to_location['model'] != -1:
             glUniformMatrix4fv(self._uniform_to_location['model'], 1,
                                GL_FALSE, concatenate(kwargs['model']))
+            if self._uniform_to_location['normModel'] != -1:
+                norm_matrix = np.linalg.inv(kwargs['model']).transpose()
+                glUniformMatrix4fv(self._uniform_to_location['normModel'], 1,
+                                   GL_FALSE, concatenate(norm_matrix))
 
-        if 'view' in kwargs.keys():
+        if 'view' in kwargs.keys() and \
+                self._uniform_to_location['view'] != -1:
             glUniformMatrix4fv(self._uniform_to_location['view'], 1,
                                GL_FALSE, concatenate(kwargs['view']))
+
+        if 'lightColor' in kwargs.keys() and \
+                self._uniform_to_location['lightColor'] != -1:
+            color = kwargs['lightColor']
+            glUniform3f(self._uniform_to_location['lightColor'],
+                        color[0], color[1], color[2])
+
+        if 'lightPos' in kwargs.keys() and \
+                self._uniform_to_location['lightPos'] != -1:
+            color = kwargs['lightPos']
+            glUniform3f(self._uniform_to_location['lightPos'],
+                        color[0], color[1], color[2])
+
+        if 'viewPos' in kwargs.keys() and \
+                self._uniform_to_location['viewPos'] != -1:
+            view_pos = kwargs['viewPos']
+            glUniform3f(self._uniform_to_location['viewPos'],
+                        view_pos[0], view_pos[1], view_pos[2])
 
     @staticmethod
     def _load_program(vertex_path: str, fragment_path: str):
@@ -94,7 +124,15 @@ class Shader:
             'model': glGetUniformLocation(self.program,
                                           'model'),
             'projection': glGetUniformLocation(self.program,
-                                               'projection')
+                                               'projection'),
+            'lightColor': glGetUniformLocation(self.program,
+                                               'lightColor'),
+            'lightPos': glGetUniformLocation(self.program,
+                                             'lightPos'),
+            'normModel': glGetUniformLocation(self.program,
+                                              'normModel'),
+            'viewPos': glGetUniformLocation(self.program,
+                                            'viewPos')
         }
 
         return form2pos
