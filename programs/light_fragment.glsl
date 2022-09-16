@@ -9,8 +9,10 @@ uniform sampler2D mainTexture;
 
 void main()
 {
-    //color = texture(mainTexture, ourTextureCoord);
+    color = texture(mainTexture, ourTextureCoord);
     //color = vec4(0.2f, 0.2f, 0.2f, 1);
-    vec3 uv = localPos - gl_FragCoord.xyz;
-    color = vec4(sqrt(dot(uv, uv)));
+    //vec2 uv = (gl_FragCoord.xy - 0.5f * vec2(1920, 1080)) / 1080;
+    //vec3 col = vec3(0);
+    //col += 0.01f / length(uv);
+    //color = vec4(sqrt(dot(uv, uv)));
 }

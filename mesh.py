@@ -1,4 +1,3 @@
-import numpy as np
 import pygame
 from shader import *
 
@@ -52,7 +51,7 @@ class Texture:
 
 
 class Material:
-    def __init__(self, vertices: np.ndarray,
+    def __init__(self, vertices: list,
                  model_idx: int, texture_name: str):
         '''
         :param vertices: format 'T2F_N3F_V3F'
@@ -111,7 +110,7 @@ class Mesh:
         return np.array(vertices, dtype=np.float32)
 
     def draw(self, shader: Shader):
-        glUseProgram(shader.program)
+        shader.use()
 
         glBindVertexArray(self.VAO)
 
