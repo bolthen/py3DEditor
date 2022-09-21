@@ -33,8 +33,7 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0), 32);
     vec3 specular = specularStrength * spec * lightColor;
 
-    //vec4 objectColor = texture(mainTexture, newTextures);
-    vec4 objectColor = 1 - vec4(ourNormals, 1.0f);
+    vec4 objectColor = texture(mainTexture, newTextures);
 
     color = objectColor * vec4(ambient + diffuse + specular, 1.0f);
 }

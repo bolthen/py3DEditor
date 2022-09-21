@@ -89,7 +89,7 @@ class Object:
         self.meshes = []
 
     def draw(self, shader: Shader):
-        shader.set_uniforms(model=matrices.scale(1))
+        shader.set_uniforms(model=matrices.rotate_x(-90))
         for mesh in self.meshes:
             mesh.draw(shader)
 
@@ -106,19 +106,20 @@ class Vertex:
         self.n3 = n3
 
     def to_opengl_format(self):
-        return [self.s, self.y,
+        return [self.s, self.t,
                 self.n1, self.n2, self.n3,
                 self.x, self.y, self.z]
 
 
 class Sphere(Object):
-
-    def __init__(self, radius: int, sector_count: int, stack_count: int):
+    def __init__(self, radius: int, sector_count: int, stack_count: int,
+                 texture_name=''):
         super().__init__()
         self.radius = radius
         self.n_sectors = sector_count
         self.n_stacks = stack_count
         self.vertices = []
+        self.texture = texture_name
         self._generate()
 
     def _generate(self):
@@ -166,7 +167,7 @@ class Sphere(Object):
                     self._add_vertex_by_idx(vertices, idx1, idx2, idx3)
                     self._add_vertex_by_idx(vertices, idx1, idx1 + 1, idx3)
 
-        material = Material(self.vertices, 0, '')
+        material = Material(self.vertices, 0, self.texture)
         self.meshes.append(Mesh([material], np.array([])))
 
     def _add_vertex_by_idx(self, vertices, idx1, idx2, idx3):
