@@ -3,15 +3,15 @@ from shader import *
 
 
 class Texture:
-    def __init__(self, id_: int, texture_name: str):
+    def __init__(self, id_: int, texture_name: str, should_flip=False):
         self.id = id_
         self.name = texture_name
         self.texture = None
         if texture_name != '':
-            self.texture = self._load_texture()
+            self.texture = self._load_texture(should_flip)
 
-    def _load_texture(self):
-        image, width, height = self._get_texture_data(self.name)
+    def _load_texture(self, should_flip):
+        image, width, height = self._get_texture_data(self.name, should_flip)
         texture = glGenTextures(1)
 
         glBindTexture(GL_TEXTURE_2D, texture)
@@ -52,14 +52,14 @@ class Texture:
 
 class Material:
     def __init__(self, vertices: list,
-                 model_idx: int, texture_name: str):
+                 model_idx: int, texture_name: str, flip_texture=False):
         '''
         :param vertices: format 'T2F_N3F_V3F'
         '''
 
         self.vertices = vertices
         self.model_idx = model_idx
-        self.texture = Texture(model_idx, texture_name)
+        self.texture = Texture(model_idx, texture_name, flip_texture)
 
     def activate_texture(self, shader: Shader, texture_var_name='mainTexture'):
         self.texture.activate(shader, texture_var_name)

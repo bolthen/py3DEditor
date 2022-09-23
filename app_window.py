@@ -1,13 +1,8 @@
-import timer
 import wx
 import sys
-from wx import glcanvas
-from wx.lib import ticker
-from OpenGL.GL import *
-import OpenGL.GL.shaders
-from pyrr import Matrix44, matrix44, Vector3
-import time, sys
 
+from wx import glcanvas
+from OpenGL.GL import *
 from camera import Camera
 from model import Model
 from shader import Shader
@@ -18,7 +13,8 @@ class OpenGLCanvas(glcanvas.GLCanvas):
     def __init__(self, parent, grand_parent):
         self.window_size = (1920, 1080)
         self.aspect_ratio = self.window_size[0] / self.window_size[1]
-        glcanvas.GLCanvas.__init__(self, parent, id=wx.EXPAND, size=self.window_size)
+        glcanvas.GLCanvas.__init__(self, parent, id=wx.EXPAND,
+                                   size=self.window_size)
         self.context = glcanvas.GLContext(self)
         self.SetCurrent(self.context)
         self.init = False
@@ -40,9 +36,11 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_UP, self.on_key_up)
         self.Bind(wx.EVT_MOTION, self.on_mouse_move)
-        self.Bind(wx.EVT_MIDDLE_DOWN, self.on_mouse_middle_down)
-        self.Bind(wx.EVT_MIDDLE_UP, self.on_mouse_middle_up)
+        self.Bind(wx.EVT_RIGHT_DOWN, self.on_mouse_right_down)
+        self.Bind(wx.EVT_RIGHT_UP, self.on_mouse_right_up)
         self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
+        self.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter_window)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.on_mouse_leave_window)
 
     def on_resize(self, event):
         size = self.GetClientSize()
@@ -57,8 +55,10 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         self.on_draw()
 
     def init_gl(self):
-        self.light_model = Model('models/Light/Lamp.obj', 0.003, [10, 5, 7])
-        self.model = Sphere(5, 50, 50, 'models/earth2048.bmp')
+        self.light_model = Model('models/Light/Lamp.obj', [10, 5, 7], 0.003)
+        self.model = Sphere(5, 50, 50, [0, 0, 0], 'models/earth2048.bmp',
+                            should_flip_texture=True)
+        self.model.set_x_rotation(90)
         self.active_shader = Shader('programs/vertex_shader.glsl',
                                     'programs/fragment_shader.glsl')
         self.light_shader = Shader('programs/light_vertex.glsl',
@@ -92,14 +92,14 @@ class OpenGLCanvas(glcanvas.GLCanvas):
                                           self.last_mouse_pos[1] - event.y)
             self.WarpPointer(-self.last_mouse_pos[0], self.last_mouse_pos[1])
 
-    def on_mouse_middle_down(self, event):
+    def on_mouse_right_down(self, event):
         self.last_mouse_pos = (-event.x, event.y)
         self.mouse_input = True
-        self.panel.SetCursor(wx.StockCursor(wx.CURSOR_BLANK))
+        self._hide_mouse_cursor()
 
-    def on_mouse_middle_up(self, event):
+    def on_mouse_right_up(self, event):
         self.mouse_input = False
-        self.panel.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+        self._show_mouse_cursor()
 
     def on_mouse_wheel(self, event):
         self.camera.fov -= event.WheelRotation * \
@@ -128,6 +128,19 @@ class OpenGLCanvas(glcanvas.GLCanvas):
 
     def on_key_up(self, event):
         self.active_keys[event.KeyCode % 1024] = False
+
+    def on_mouse_enter_window(self, event):
+        pass
+
+    def on_mouse_leave_window(self, event):
+        self._show_mouse_cursor()
+        self.mouse_input = False
+
+    def _hide_mouse_cursor(self):
+        self.panel.SetCursor(wx.StockCursor(wx.CURSOR_BLANK))
+
+    def _show_mouse_cursor(self):
+        self.panel.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
 
 class GlPanel(wx.Panel):
@@ -161,8 +174,8 @@ class MyFrame(wx.Frame):
 
         self.settings_panel.SetSizer(hbox1)
 
-        main_hbox.Add(self.gl_panel, proportion=3, flag=wx.ALL, border=20)
-        main_hbox.Add(self.settings_panel, proportion=1, flag=wx.EXPAND | wx.ALL, border=20)
+        main_hbox.Add(self.gl_panel, proportion=24, flag=wx.ALL, border=20)
+        main_hbox.Add(self.settings_panel, proportion=10, flag=wx.EXPAND | wx.ALL, border=20)
 
         self.SetSizer(main_hbox)
 

@@ -2,7 +2,6 @@ import math
 
 import numpy as np
 import wx as wx
-import pygame
 import matrix_functions as matrices
 
 from pyrr import Matrix44

@@ -85,13 +85,60 @@ rect_indices = np.array([
 
 
 class Object:
-    def __init__(self):
+    def _compute_transform(change_func):
+        def new_func(self, *args, **kwargs):
+            change_func(self, *args, **kwargs)
+            self._calculate_transform_matrix()
+
+        return new_func
+
+    def __init__(self, pos: list, scale=1):
         self.meshes = []
+        self.wireframe = False
+        self.scale = scale
+        self.transform = None
+        self.pos = np.array(pos, dtype=np.float32)
+        self.yaw = 0
+        self.pitch = 0
+        self.roll = 0
+        self._calculate_transform_matrix()
 
     def draw(self, shader: Shader):
-        shader.set_uniforms(model=matrices.rotate_x(-90))
+        if self.wireframe:
+            shader.enable_wireframe()
+        else:
+            shader.disable_wireframe()
+        shader.set_uniforms(model=self.transform)
         for mesh in self.meshes:
             mesh.draw(shader)
+
+    def _calculate_transform_matrix(self):
+        self.transform = \
+            matrices.scale(self.scale) @ \
+            matrices.rotate_y(self.pitch) @ \
+            matrices.rotate_x(self.yaw) @ \
+            matrices.rotate_z(self.roll) @ \
+            matrices.translate(self.pos[0], self.pos[1], self.pos[2])
+
+    @_compute_transform
+    def translate(self, tx, ty, tz):
+        self.pos += np.array([tx, ty, tz], dtype=np.float32)
+
+    @_compute_transform
+    def set_pos(self, x, y, z):
+        self.pos = np.array([x, y, z], dtype=np.float32)
+
+    @_compute_transform
+    def set_x_rotation(self, degree):
+        self.yaw = degree
+
+    @_compute_transform
+    def set_y_rotation(self, degree):
+        self.pitch = degree
+
+    @_compute_transform
+    def set_z_rotation(self, degree):
+        self.roll = degree
 
 
 class Vertex:
@@ -113,16 +160,17 @@ class Vertex:
 
 class Sphere(Object):
     def __init__(self, radius: int, sector_count: int, stack_count: int,
-                 texture_name=''):
-        super().__init__()
+                 start_pos: list, texture_name='', scale=1,
+                 should_flip_texture=False):
+        super().__init__(start_pos, scale)
         self.radius = radius
         self.n_sectors = sector_count
         self.n_stacks = stack_count
         self.vertices = []
         self.texture = texture_name
-        self._generate()
+        self._generate(should_flip_texture)
 
-    def _generate(self):
+    def _generate(self, flip):
         sector_step = 2 * math.pi / self.n_sectors
         stack_step = math.pi / self.n_stacks
         vertices = []
@@ -151,9 +199,9 @@ class Sphere(Object):
 
                 vertices.append(vert)
 
-        self._vertices_to_triangles(vertices)
+        self._vertices_to_triangles(vertices, flip)
 
-    def _vertices_to_triangles(self, vertices: list):
+    def _vertices_to_triangles(self, vertices: list, flip):
         for i in range(self.n_stacks + 1):
             for j in range(self.n_sectors + 1):
                 idx1 = i * self.n_sectors + j
@@ -167,7 +215,7 @@ class Sphere(Object):
                     self._add_vertex_by_idx(vertices, idx1, idx2, idx3)
                     self._add_vertex_by_idx(vertices, idx1, idx1 + 1, idx3)
 
-        material = Material(self.vertices, 0, self.texture)
+        material = Material(self.vertices, 0, self.texture, flip)
         self.meshes.append(Mesh([material], np.array([])))
 
     def _add_vertex_by_idx(self, vertices, idx1, idx2, idx3):
