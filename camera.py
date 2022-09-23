@@ -1,10 +1,12 @@
 import math
 
 import numpy as np
+import wx as wx
 import pygame
 import matrix_functions as matrices
 
 from pyrr import Matrix44
+from PyQt5.QtCore import Qt
 
 
 class _MovementSystem:
@@ -23,22 +25,22 @@ class _MovementSystem:
         direction = np.array([0, 0, 0], dtype=np.float32)
         speed = self._speed
 
-        if active_keys[pygame.K_LSHIFT % 1024]:
+        if active_keys[wx.WXK_SHIFT % 1024]:
             speed *= 5
-        if active_keys[pygame.K_w % 1024]:
+        if active_keys[Qt.Key_W % 1024]:
             direction += np.array([view_dir[0], 0, view_dir[2]],
                                   dtype=np.float32)
-        if active_keys[pygame.K_s % 1024]:
+        if active_keys[Qt.Key_S % 1024]:
             direction -= np.array([view_dir[0], 0, view_dir[2]],
                                   dtype=np.float32)
-        if active_keys[pygame.K_q % 1024]:
+        if active_keys[Qt.Key_Q % 1024]:
             direction += np.array([0, -1, 0], dtype=np.float32)
-        if active_keys[pygame.K_e % 1024]:
+        if active_keys[Qt.Key_E % 1024]:
             direction += np.array([0, 1, 0], dtype=np.float32)
-        if active_keys[pygame.K_a % 1024]:
+        if active_keys[Qt.Key_A % 1024]:
             direction -= matrices.normalize_vec(
                 np.cross(view_dir, np.array([0, 1, 0], dtype=np.float32)))
-        if active_keys[pygame.K_d % 1024]:
+        if active_keys[Qt.Key_D % 1024]:
             direction += matrices.normalize_vec(
                 np.cross(view_dir, np.array([0, 1, 0], dtype=np.float32)))
 
