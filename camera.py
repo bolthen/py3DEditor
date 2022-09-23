@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt
 
 
 class _MovementSystem:
-    def __init__(self, resistance_force=0.05, mass=80, speed=10):
+    def __init__(self, resistance_force=0.05, mass=80, speed=20):
         self._mass = mass
         self._resistance = resistance_force
         self._speed = speed

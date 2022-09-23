@@ -16,9 +16,9 @@ from shapes import Sphere
 
 class OpenGLCanvas(glcanvas.GLCanvas):
     def __init__(self, parent, grand_parent):
-        self.window_size = (1120, 630)
+        self.window_size = (1920, 1080)
         self.aspect_ratio = self.window_size[0] / self.window_size[1]
-        glcanvas.GLCanvas.__init__(self, parent, -1, size=self.window_size)
+        glcanvas.GLCanvas.__init__(self, parent, id=wx.EXPAND, size=self.window_size)
         self.context = glcanvas.GLContext(self)
         self.SetCurrent(self.context)
         self.init = False
@@ -95,14 +95,16 @@ class OpenGLCanvas(glcanvas.GLCanvas):
     def on_mouse_middle_down(self, event):
         self.last_mouse_pos = (-event.x, event.y)
         self.mouse_input = True
-
-    def on_mouse_wheel(self, event):
-        self.camera.fov += event.WheelRotation * \
-                           self.camera.wheel_sensitivity // 120
-        self._update_projection_matrix()
+        self.panel.SetCursor(wx.StockCursor(wx.CURSOR_BLANK))
 
     def on_mouse_middle_up(self, event):
         self.mouse_input = False
+        self.panel.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
+    def on_mouse_wheel(self, event):
+        self.camera.fov -= event.WheelRotation * \
+                           self.camera.wheel_sensitivity // 120
+        self._update_projection_matrix()
 
     def _calculate_delta_time(self):
         current_frame = self.time.Time()
@@ -128,139 +130,41 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         self.active_keys[event.KeyCode % 1024] = False
 
 
-class MyPanel(wx.Panel):
+class GlPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        self.SetBackgroundColour("#626D58")
+        self.SetBackgroundColour("#3A4451")
         self.canvas = OpenGLCanvas(self, parent)
 
-        # the Start/Stop rotation button
-        self.rot_btn = wx.Button(self, -1, label="Start/Stop \nrotation", pos=(1130, 10), size=(100, 50))
-        self.rot_btn.BackgroundColour = [125, 125, 125]
-        self.rot_btn.ForegroundColour = [255, 255, 255]
-
-        # the radio buttons to switch between the 3D objects
-        self.rad_btn1 = wx.RadioButton(self, -1, label="Show Triangle", pos=(1130, 80))
-        self.rad_btn2 = wx.RadioButton(self, -1, label="Show Quad", pos=(1130, 100))
-        self.rad_btn3 = wx.RadioButton(self, -1, label="Show Cube", pos=(1130, 120))
-
-        # the translation sliders
-        self.x_slider = wx.Slider(self, -1, pos=(1130, 180), size=(40, 150), style=wx.SL_VERTICAL|wx.SL_AUTOTICKS,
-                                  value=0, minValue=-5, maxValue=5)
-        self.y_slider = wx.Slider(self, -1, pos=(1170, 180), size=(40, 150), style=wx.SL_VERTICAL | wx.SL_AUTOTICKS,
-                                  value=0, minValue=-5, maxValue=5)
-        self.z_slider = wx.Slider(self, -1, pos=(1210, 180), size=(40, 150), style=wx.SL_VERTICAL | wx.SL_AUTOTICKS,
-                                  value=0, minValue=-5, maxValue=5)
-
-        # the slider labels using static texts
-        font = wx.Font(14, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
-        self.x_slider_label = wx.StaticText(self, -1, label="X", pos=(1137, 160))
-        self.x_slider_label.SetFont(font)
-        self.y_slider_label = wx.StaticText(self, -1, label="Y", pos=(1177, 160))
-        self.y_slider_label.SetFont(font)
-        self.z_slider_label = wx.StaticText(self, -1, label="Z", pos=(1217, 160))
-        self.z_slider_label.SetFont(font)
-
-        # the checkboxes to set background color and the wireframe rendering
-        self.bg_color = wx.CheckBox(self, -1, pos=(1130, 360), label="Black background")
-        self.wireframe = wx.CheckBox(self, -1, pos=(1130, 390), label="Wireframe mode")
-
-        # text control to display the translation matrix and the rotation matrix combined
-        self.log_text = wx.TextCtrl(self, -1, size=(1120, 110), pos=(0, 630), style=wx.TE_MULTILINE)
-        self.log_text.BackgroundColour = [70, 125, 70]
-        self.log_text.SetFont(font)
-        # self.log_text.AppendText(str(self.canvas.ticker.GetFPS()))
-
-        # identity button, resets the matrices to identity
-        self.identity_btn = wx.Button(self, -1, label="Set identity \nmatrix", pos=(1130, 630), size=(100, 50))
-        self.identity_btn.BackgroundColour = [125, 125, 125]
-        self.identity_btn.ForegroundColour = [255, 255, 255]
-
-        # all the event bindings
-        self.Bind(wx.EVT_BUTTON, self.rotate, self.rot_btn)
-        self.Bind(wx.EVT_RADIOBUTTON, self.triangle, self.rad_btn1)
-        self.Bind(wx.EVT_RADIOBUTTON, self.quad, self.rad_btn2)
-        self.Bind(wx.EVT_RADIOBUTTON, self.cube, self.rad_btn3)
-        self.Bind(wx.EVT_SLIDER, self.translate)
-        self.Bind(wx.EVT_CHECKBOX, self.change_bg_color, self.bg_color)
-        self.Bind(wx.EVT_CHECKBOX, self.set_wireframe, self.wireframe)
-        self.Bind(wx.EVT_BUTTON, self.set_identity, self.identity_btn)
-
-    def warp_pointer(self, x, y):
-        self.WarpPointer(x, y)
-
-    def set_identity(self, event):
-        self.canvas.combined_matrix = Matrix44.identity()
-        self.canvas.rotate = False
-        self.canvas.trans_x, self.canvas.trans_y, self.canvas.trans_z = 0, 0, 0
-        self.canvas.rot_y = Matrix44.identity()
-        self.x_slider.SetValue(0)
-        self.y_slider.SetValue(0)
-        self.z_slider.SetValue(0)
-        self.log_matrix()
-        self.canvas.Refresh()
-
-    # displays the combined matrix on the text control area
-    def log_matrix(self):
-        self.log_text.Clear()
-        self.log_text.AppendText(str(self.canvas.ticker.GetFPS()))
-
-    # sets the wireframe mode
-    def set_wireframe(self, event):
-        self.canvas.wireframe = self.wireframe.GetValue()
-        self.canvas.Refresh()
-
-    # changes the clear color to black
-    def change_bg_color(self, event):
-        self.canvas.bg_color = self.bg_color.GetValue()
-        self.canvas.Refresh()
-
-    # this method translates the 3D objects
-    def translate(self, event):
-        self.canvas.trans_x = self.x_slider.GetValue() * -0.2
-        self.canvas.trans_y = self.y_slider.GetValue() * -0.2
-        self.canvas.trans_z = self.z_slider.GetValue() * 0.5
-        self.log_matrix()
-        self.canvas.Refresh()
-
-    # this method shows the triangle
-    def triangle(self, event):
-        self.canvas.show_triangle = True
-        self.canvas.show_quad = False
-        self.canvas.show_cube = False
-        self.canvas.Refresh()
-
-    # this method shows the quad
-    def quad(self, event):
-        self.canvas.show_triangle = False
-        self.canvas.show_quad = True
-        self.canvas.show_cube = False
-        self.canvas.Refresh()
-
-    def cube(self, event):
-        self.canvas.show_triangle = False
-        self.canvas.show_quad = False
-        self.canvas.show_cube = True
-        self.canvas.Refresh()
-
-    def rotate(self, event):
-        if not self.canvas.rotate:
-            self.canvas.rotate = True
-            self.canvas.Refresh()
-        else:
-            self.canvas.rotate = False
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(self.canvas, wx.ID_ANY, wx.EXPAND | wx.ALL)
+        self.SetSizer(hbox)
 
 
 class MyFrame(wx.Frame):
     def __init__(self):
-        self.size = (1280, 780)
-        wx.Frame.__init__(self, None, title="My wx frame", size=self.size,
+        wx.Frame.__init__(self, None, title="My wx frame",
                           style=wx.DEFAULT_FRAME_STYLE | wx.FULL_REPAINT_ON_RESIZE)
-        self.SetMinSize((800, 600))
         self.SetMaxSize((1920, 1080))
         self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.SetBackgroundColour("#293039")
 
-        self.panel = MyPanel(self)
+        main_hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.gl_panel = GlPanel(self)
+
+        self.settings_panel = wx.Panel(self)
+        self.settings_panel.SetBackgroundColour("#3A4451")
+
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+        hbox1.Add(wx.TextCtrl(self.settings_panel), proportion=1, flag=wx.EXPAND)
+
+        self.settings_panel.SetSizer(hbox1)
+
+        main_hbox.Add(self.gl_panel, proportion=3, flag=wx.ALL, border=20)
+        main_hbox.Add(self.settings_panel, proportion=1, flag=wx.EXPAND | wx.ALL, border=20)
+
+        self.SetSizer(main_hbox)
 
     def on_close(self, event):
         self.Destroy()
