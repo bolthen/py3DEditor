@@ -1,9 +1,6 @@
-import math
-
 from model import *
 from shapes import Sphere
 from camera import Camera
-from OpenGL.GLU import *
 
 
 class Game:
@@ -12,10 +9,9 @@ class Game:
         self._init_pygame()
         self.aspect_ratio = self.window_size[0] / self.window_size[1]
         self.light_model = Model('models/Light/Lamp.obj', 0.003, [10, 5, 7])
-        # self.model = Model('models/Tiger 131/Tiger 131.obj', scale=3)
-        # self.model = Model('models/Eric/rp_eric_rigged_001_zup_t.obj', scale=0.3)
-        # self.model = Model('models/Tiger Animal/smilodon.obj', scale=0.03)
         self.model = Sphere(5, 50, 50, 'models/earth2048.bmp')
+        self.model2 = Model('models/Tiger 131/Tiger 131.obj', scale=6,
+                            start_pos=[15, -4, -15])
         self.active_shader = Shader('programs/vertex_shader.glsl',
                                     'programs/fragment_shader.glsl')
         self.light_shader = Shader('programs/light_vertex.glsl',
@@ -31,7 +27,6 @@ class Game:
 
         glClearColor(125 / 255, 125 / 255, 125 / 255, 1)
         glEnable(GL_DEPTH_TEST)
-        # self.active_shader.enable_wireframe()
         self.active_shader.set_uniforms(lightColor=[1, 1, 1])
         self.active_shader.set_uniforms(lightPos=self.light_model.pos)
 
@@ -40,17 +35,11 @@ class Game:
             self.calculate_delta_time()
             self.camera.do_movement(self.active_keys, self.delta_time)
 
-            radius = 10.0
-            camX = math.sin(pygame.time.get_ticks() / 1000) * radius
-            camZ = math.cos(pygame.time.get_ticks() / 1000) * radius
-            # self.light_model.set_pos(camX, 5, camZ)
-
-            # self.active_shader.set_uniforms(lightPos=[camX, 5, camZ])
-
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
             self._update_view_matrix()
 
+            self.model2.draw(self.active_shader)
             self.model.draw(self.active_shader)
             self.light_model.draw(self.light_shader)
 
