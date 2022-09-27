@@ -1,5 +1,5 @@
 from model import *
-import matrix_functions as matrices
+from shapes import Sphere
 from camera import Camera
 
 
@@ -8,11 +8,15 @@ class Game:
         self.window_size = (1920, 1080)
         self._init_pygame()
         self.aspect_ratio = self.window_size[0] / self.window_size[1]
-        self.model = Model('models/Eric/rp_eric_rigged_001_zup_t.obj')
-        # self.model = Model('models/Eric/rp_eric_rigged_001_zup_t.obj')
-        self.active_shader = self.shader_program = \
-            Shader('programs/vertex_shader.glsl',
-                   'programs/fragment_shader.glsl')
+        self.light_model = Model('models/Light/Lamp.obj', 0.003, [10, 5, 7])
+        self.model = Sphere(5, 50, 50, 'models/earth2048.bmp')
+        self.model2 = Model('models/Tiger 131/Tiger 131.obj', scale=6,
+                            start_pos=[15, -4, -15])
+        self.active_shader = Shader('programs/vertex_shader.glsl',
+                                    'programs/fragment_shader.glsl')
+        self.light_shader = Shader('programs/light_vertex.glsl',
+                                   'programs/light_fragment.glsl')
+        self.all_shaders = [self.active_shader, self.light_shader]
         self.active_keys = [False] * 1024
         self.camera = Camera()
         self.delta_time = 0
@@ -21,9 +25,10 @@ class Game:
     def run(self):
         self._update_projection_matrix()
 
-        glClearColor(200 / 255, 200 / 255, 200 / 255, 1)
+        glClearColor(125 / 255, 125 / 255, 125 / 255, 1)
         glEnable(GL_DEPTH_TEST)
-        # self.active_shader.enable_wireframe()
+        self.active_shader.set_uniforms(lightColor=[1, 1, 1])
+        self.active_shader.set_uniforms(lightPos=self.light_model.pos)
 
         while True:
             self._pull_events()
@@ -32,10 +37,11 @@ class Game:
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-            self.active_shader.set_uniforms(view=self.camera.get_view_matrix())
-            self.active_shader.set_uniforms(model=matrices.scale(0.3) @ matrices.rotate_x(90))
+            self._update_view_matrix()
 
+            self.model2.draw(self.active_shader)
             self.model.draw(self.active_shader)
+            self.light_model.draw(self.light_shader)
 
             pygame.display.flip()
 
@@ -54,8 +60,14 @@ class Game:
         pygame.mouse.set_visible(False)
 
     def _update_projection_matrix(self):
-        self.active_shader.set_uniforms(
-            projection=self.camera.get_projection(self.aspect_ratio))
+        matrix = self.camera.get_projection(self.aspect_ratio)
+        for shader in self.all_shaders:
+            shader.set_uniforms(projection=matrix)
+
+    def _update_view_matrix(self):
+        matrix = self.camera.get_view_matrix()
+        for shader in self.all_shaders:
+            shader.set_uniforms(view=matrix, viewPos=self.camera.pos)
 
     def _pull_events(self):
         for event in pygame.event.get():

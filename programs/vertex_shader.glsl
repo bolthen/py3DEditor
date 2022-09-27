@@ -6,8 +6,10 @@ layout (location = 2) in vec3 position;
 
 out vec2 ourTextureCoord;
 out vec3 ourNormals;
+out vec3 worldFragPos;
 
 uniform mat4 model;
+uniform mat4 normModel;
 uniform mat4 view;
 uniform mat4 projection;
 
@@ -15,5 +17,6 @@ void main()
 {
     gl_Position = projection * view * model * vec4(position, 1);
     ourTextureCoord = textureCoord;
-    ourNormals = normals;
+    ourNormals = mat3(normModel) * normals;
+    worldFragPos = vec3(model * vec4(position, 1));
 }
