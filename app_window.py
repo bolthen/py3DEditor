@@ -6,7 +6,7 @@ from OpenGL.GL import *
 from camera import Camera
 from model import Model
 from shader import Shader
-from shapes import Sphere
+from shapes import Sphere, Object
 
 
 class OpenGLCanvas(glcanvas.GLCanvas):
@@ -24,13 +24,16 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         self.delta_time = 0
         self.last_frame = 0
         self.panel = grand_parent
+        self.mouse_input = False
+
         self.light_model = None
         self.model = None
         self.active_shader = None
         self.light_shader = None
-        self.all_shaders = None
         self.last_mouse_pos = None
-        self.mouse_input = False
+        self.all_shaders = None
+        self.all_objects = []
+
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
@@ -51,6 +54,7 @@ class OpenGLCanvas(glcanvas.GLCanvas):
 
         if not self.init:
             self.init_gl()
+            self.panel.on_gl_init()
             self.init = True
         self.on_draw()
 
@@ -58,6 +62,8 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         self.light_model = Model('models/Light/Lamp.obj', [10, 5, 7], 0.003)
         self.model = Sphere(5, 50, 50, [0, 0, 0], 'models/earth2048.bmp',
                             should_flip_texture=True)
+        self.all_objects.append(self.model)
+        self.all_objects.append(self.light_model)
         self.model.set_x_rotation(90)
         self.active_shader = Shader('programs/vertex_shader.glsl',
                                     'programs/fragment_shader.glsl')
@@ -142,42 +148,112 @@ class OpenGLCanvas(glcanvas.GLCanvas):
     def _show_mouse_cursor(self):
         self.panel.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
+    def get_all_objects(self):
+        return self.all_objects.copy()
+
 
 class GlPanel(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, grand_parent):
         wx.Panel.__init__(self, parent)
         self.SetBackgroundColour("#3A4451")
-        self.canvas = OpenGLCanvas(self, parent)
+        self.canvas = OpenGLCanvas(self, grand_parent)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(self.canvas, wx.ID_ANY, wx.EXPAND | wx.ALL)
         self.SetSizer(hbox)
 
 
+class ObjSettingsPanel(wx.Panel):
+    FONT_SIZE = 12
+
+    def __init__(self, parent, obj: Object):
+        wx.Panel.__init__(self, parent, style=wx.FULL_REPAINT_ON_RESIZE)
+        self.obj = obj
+        self.main_vbox = wx.BoxSizer(wx.VERTICAL)
+
+        self.title_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self.title_font.SetPointSize(self.FONT_SIZE * 1.5)
+        self.title_font.MakeBold()
+
+        self.font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self.font.SetPointSize(self.FONT_SIZE)
+
+        self.title = wx.StaticText(self, label=obj.get_obj_name())
+        self.title.SetFont(self.title_font)
+
+        self.wireframe_checkbox = wx.CheckBox(self, label="Wireframe")
+        self.wireframe_checkbox.SetFont(self.font)
+        self.wireframe_checkbox.Bind(wx.EVT_CHECKBOX, self._change_wireframe)
+
+        self.main_vbox.Add(self.title, wx.ID_ANY, flag=wx.EXPAND | wx.ALL,
+                           border=self.FONT_SIZE * 1.25)
+        self.main_vbox.Add(self.wireframe_checkbox, wx.ID_ANY,
+                           wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(self.main_vbox)
+
+    def _change_wireframe(self, event):
+        self.obj.wireframe = event.IsChecked()
+
+
 class MyFrame(wx.Frame):
     def __init__(self):
-        wx.Frame.__init__(self, None, title="My wx frame",
-                          style=wx.DEFAULT_FRAME_STYLE | wx.FULL_REPAINT_ON_RESIZE)
+        wx.Frame.__init__(self, None, title="My wx frame")
         self.SetMaxSize((1920, 1080))
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.SetBackgroundColour("#293039")
+        self.ShowFullScreen(True)
 
+        self.gl_panel = GlPanel(self, self)
+        main_hbox = wx.BoxSizer(wx.HORIZONTAL)
+        main_hbox.Add(self.gl_panel, proportion=1,
+                      flag=wx.EXPAND)
+        self.SetSizer(main_hbox)
+
+
+    def on_gl_init(self):
+        return
+        '''
         main_hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.gl_panel = GlPanel(self)
-
-        self.settings_panel = wx.Panel(self)
+        self.settings_panel = wx.Panel(self, style=wx.FULL_REPAINT_ON_RESIZE)
         self.settings_panel.SetBackgroundColour("#3A4451")
 
-        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1.Add(wx.TextCtrl(self.settings_panel), proportion=1, flag=wx.EXPAND)
+        self.hbox1 = wx.BoxSizer(wx.VERTICAL)
+        objects = self.gl_panel.canvas.get_all_objects()
 
-        self.settings_panel.SetSizer(hbox1)
+        first = ObjSettingsPanel(self.settings_panel, objects[0])
+        second = ObjSettingsPanel(self.settings_panel, objects[1])
+
+        self.hbox1.Add(first, 1, wx.EXPAND | wx.ALL, 5)
+        self.hbox1.Add(second, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.settings_panel.SetSizer(self.hbox1)
 
         main_hbox.Add(self.gl_panel, proportion=24, flag=wx.ALL, border=20)
         main_hbox.Add(self.settings_panel, proportion=10, flag=wx.EXPAND | wx.ALL, border=20)
 
-        self.SetSizer(main_hbox)
+        self.SetSizer(main_hbox)'''
+
+        main_hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        settings_panel = wx.Panel(self.main_panel)
+        objects = self.gl_panel.canvas.get_all_objects()
+
+        first = ObjSettingsPanel(settings_panel, objects[0])
+        second = ObjSettingsPanel(settings_panel, objects[1])
+        vbox1 = wx.BoxSizer(wx.VERTICAL)
+        vbox1.Add(first, wx.ID_ANY, flag=wx.EXPAND | wx.ALL, border=5)
+        vbox1.Add(second, wx.ID_ANY, flag=wx.EXPAND | wx.ALL, border=5)
+        settings_panel.SetSizer(vbox1)
+
+        main_hbox.Add(self.gl_panel, proportion=24,
+                      flag=wx.EXPAND | wx.ALL, border=20)
+        # main_hbox.Add(settings_panel, proportion=10,
+        #               flag=wx.EXPAND | wx.ALL, border=20)
+
+        self.main_panel.SetSizer(main_hbox)
+        self.main_panel.Refresh()
 
     def on_close(self, event):
         self.Destroy()

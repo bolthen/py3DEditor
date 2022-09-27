@@ -31,3 +31,6 @@ class Model(Object):
             self.meshes.append(
                 Mesh(materials,
                      concatenate(np.array(mesh.faces, dtype=np.uint32))))
+
+    def get_obj_name(self):
+        return self.path

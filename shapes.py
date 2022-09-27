@@ -120,6 +120,9 @@ class Object:
             matrices.rotate_z(self.roll) @ \
             matrices.translate(self.pos[0], self.pos[1], self.pos[2])
 
+    def get_obj_name(self):
+        return "Unknown"
+
     @_compute_transform
     def translate(self, tx, ty, tz):
         self.pos += np.array([tx, ty, tz], dtype=np.float32)
@@ -169,6 +172,9 @@ class Sphere(Object):
         self.vertices = []
         self.texture = texture_name
         self._generate(should_flip_texture)
+
+    def get_obj_name(self):
+        return "Sphere"
 
     def _generate(self, flip):
         sector_step = 2 * math.pi / self.n_sectors
