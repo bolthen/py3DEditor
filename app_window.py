@@ -176,6 +176,7 @@ class OpenGLCanvas(glcanvas.GLCanvas):
 
 class ObjSettingsPanel(wx.Panel):
     FONT_SIZE = 12
+    FONT_COLOR = '#000000'
 
     def __init__(self, parent, obj: Object):
         wx.Panel.__init__(self, parent, style=wx.SIMPLE_BORDER)
@@ -185,16 +186,16 @@ class ObjSettingsPanel(wx.Panel):
 
         self.title_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         self.title_font.SetPointSize(self.FONT_SIZE * 1.5)
-        self.title_font.MakeBold()
-
         self.font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         self.font.SetPointSize(self.FONT_SIZE)
 
         self.title = wx.StaticText(self, label=obj.get_obj_name())
+        self.title.SetForegroundColour(self.FONT_COLOR)
         self.title.SetFont(self.title_font)
 
         self.wireframe_checkbox = wx.CheckBox(self, label="Wireframe")
         self.wireframe_checkbox.SetFont(self.font)
+        self.wireframe_checkbox.SetForegroundColour(self.FONT_COLOR)
         self.wireframe_checkbox.Bind(wx.EVT_CHECKBOX, self._change_wireframe)
 
         pitch = self._get_angle_hbox("Pitch", self._change_pitch)
@@ -225,6 +226,8 @@ class ObjSettingsPanel(wx.Panel):
         slider.Bind(wx.EVT_SCROLL, handler)
         yaw_text = wx.StaticText(self, wx.ID_ANY, text)
         yaw_text.SetFont(self.font)
+        yaw_text.SetForegroundColour(self.FONT_COLOR)
+        slider.SetForegroundColour(self.FONT_COLOR)
         hbox.Add(slider, 1, wx.ALL | wx.EXPAND)
         hbox.Add(yaw_text, 1, wx.ALL | wx.EXPAND)
         return hbox
@@ -237,6 +240,8 @@ class ObjSettingsPanel(wx.Panel):
         pos.Bind(floatspin.EVT_FLOATSPIN, handler)
         yaw_text = wx.StaticText(self, wx.ID_ANY, text)
         yaw_text.SetFont(self.font)
+        yaw_text.SetForegroundColour(self.FONT_COLOR)
+        pos.SetForegroundColour(self.FONT_COLOR)
         hbox.Add(pos, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
         hbox.Add(yaw_text, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
         return hbox
@@ -275,6 +280,7 @@ class MyFrame2(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.panel = wx.Panel(self)
         self.gl_panel = OpenGLCanvas(self.panel, self)
+        self.SetBackgroundColour('#0F385C')
         # self.gl_panel = GlPanel(self.panel, self)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -290,7 +296,8 @@ class MyFrame2(wx.Frame):
 
         scrollbar.SetSizer(vbox)
 
-        hbox.Add(self.gl_panel, proportion=24, flag=wx.EXPAND)
+        hbox.Add(self.gl_panel, proportion=24, flag=wx.EXPAND | wx.ALL,
+                 border=10)
         hbox.Add(scrollbar, proportion=7, flag=wx.EXPAND | wx.ALL, border=5)
 
         self.panel.SetSizer(hbox)
