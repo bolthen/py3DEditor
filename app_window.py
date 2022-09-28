@@ -3,6 +3,7 @@ import sys
 
 from threading import Lock
 from wx import glcanvas
+from wx.lib import scrolledpanel
 from OpenGL.GL import *
 from camera import Camera
 from model import Model
@@ -70,7 +71,7 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         glViewport(0, 0, size.width, size.height)
 
     def on_paint(self, event) -> None:
-        self.draw_mutex.acquire(1)
+        self.draw_mutex.acquire()
         wx.PaintDC(self)
 
         if not self.init:
@@ -95,8 +96,6 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         self.SwapBuffers()
 
     def init_gl(self) -> None:
-        self.earth_model.set_x_rotation(90)
-        self.eric_model.set_x_rotation(90)
         self.active_shader = Shader('programs/vertex_shader.glsl',
                                     'programs/fragment_shader.glsl')
         self.light_shader = Shader('programs/light_vertex.glsl',
@@ -197,15 +196,41 @@ class ObjSettingsPanel(wx.Panel):
         self.wireframe_checkbox.SetFont(self.font)
         self.wireframe_checkbox.Bind(wx.EVT_CHECKBOX, self._change_wireframe)
 
+        pitch = self._get_angle_hbox("Pitch", self._change_pitch)
+        yaw = self._get_angle_hbox("Yaw", self._change_yaw)
+        roll = self._get_angle_hbox("Roll", self._change_roll)
+
         self.main_vbox.Add(self.title, 0, wx.ALL | wx.CENTER, 5)
         self.main_vbox.Add(self.wireframe_checkbox, 0, wx.ALL, 5)
+        self.main_vbox.Add(pitch, 0, wx.ALL | wx.EXPAND, 5)
+        self.main_vbox.Add(yaw, 0, wx.ALL | wx.EXPAND, 5)
+        self.main_vbox.Add(roll, 0, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(self.main_vbox)
 
-    def _change_wireframe(self, event):
+    def _get_angle_hbox(self, text: str, handler) -> wx.BoxSizer:
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        slider = wx.Slider(self, wx.ID_ANY, 0, -180, 180)
+        self.Bind(wx.EVT_SCROLL, handler, slider)
+        yaw_text = wx.StaticText(self, wx.ID_ANY, text)
+        yaw_text.SetFont(self.font)
+        hbox.Add(slider, 1, wx.ALL | wx.EXPAND)
+        hbox.Add(yaw_text, 1, wx.ALL | wx.EXPAND)
+        return hbox
+
+    def _change_wireframe(self, event) -> None:
         value = event.IsChecked()
         self.obj.wireframe = value
         self.wireframe_checkbox.SetValue(value)
+
+    def _change_pitch(self, event) -> None:
+        self.obj.set_x_rotation(event.Int)
+
+    def _change_yaw(self, event) -> None:
+        self.obj.set_y_rotation(event.Int)
+
+    def _change_roll(self, event) -> None:
+        self.obj.set_z_rotation(event.Int)
 
 
 class MyFrame2(wx.Frame):
@@ -218,18 +243,20 @@ class MyFrame2(wx.Frame):
         # self.gl_panel = GlPanel(self.panel, self)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        settings_panel = wx.Panel(self.panel)
+        scrollbar = wx.lib.scrolledpanel.ScrolledPanel(self.panel, wx.ID_ANY,
+                                                       style=wx.SIMPLE_BORDER)
+        scrollbar.SetupScrolling()
         objs = self.gl_panel.get_all_objects()
         vbox = wx.BoxSizer(wx.VERTICAL)
 
         for obj in objs:
-            panel = ObjSettingsPanel(settings_panel, obj)
-            vbox.Add(panel, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 20)
+            panel = ObjSettingsPanel(scrollbar, obj)
+            vbox.Add(panel, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 10)
 
-        settings_panel.SetSizer(vbox)
+        scrollbar.SetSizer(vbox)
 
         hbox.Add(self.gl_panel, proportion=24, flag=wx.EXPAND)
-        hbox.Add(settings_panel, proportion=5, flag=wx.EXPAND)
+        hbox.Add(scrollbar, proportion=7, flag=wx.EXPAND)
 
         self.panel.SetSizer(hbox)
 
