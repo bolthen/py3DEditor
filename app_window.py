@@ -4,6 +4,7 @@ import sys
 from threading import Lock
 from wx import glcanvas
 from wx.lib import scrolledpanel
+from wx.lib.agw import floatspin
 from OpenGL.GL import *
 from camera import Camera
 from model import Model
@@ -177,7 +178,7 @@ class ObjSettingsPanel(wx.Panel):
     FONT_SIZE = 12
 
     def __init__(self, parent, obj: Object):
-        wx.Panel.__init__(self, parent, style=wx.FULL_REPAINT_ON_RESIZE)
+        wx.Panel.__init__(self, parent, style=wx.SIMPLE_BORDER)
         self.obj = obj
 
         self.main_vbox = wx.BoxSizer(wx.VERTICAL)
@@ -200,8 +201,18 @@ class ObjSettingsPanel(wx.Panel):
         yaw = self._get_angle_hbox("Yaw", self._change_yaw)
         roll = self._get_angle_hbox("Roll", self._change_roll)
 
+        x_pos = self._get_pos_hbox("x position", self._change_x_pos,
+                                   self.obj.pos[0])
+        y_pos = self._get_pos_hbox("y position", self._change_y_pos,
+                                   self.obj.pos[1])
+        z_pos = self._get_pos_hbox("z position", self._change_z_pos,
+                                   self.obj.pos[2])
+
         self.main_vbox.Add(self.title, 0, wx.ALL | wx.CENTER, 5)
         self.main_vbox.Add(self.wireframe_checkbox, 0, wx.ALL, 5)
+        self.main_vbox.Add(x_pos, 0, wx.ALL, 5)
+        self.main_vbox.Add(y_pos, 0, wx.ALL, 5)
+        self.main_vbox.Add(z_pos, 0, wx.ALL, 5)
         self.main_vbox.Add(pitch, 0, wx.ALL | wx.EXPAND, 5)
         self.main_vbox.Add(yaw, 0, wx.ALL | wx.EXPAND, 5)
         self.main_vbox.Add(roll, 0, wx.ALL | wx.EXPAND, 5)
@@ -211,11 +222,23 @@ class ObjSettingsPanel(wx.Panel):
     def _get_angle_hbox(self, text: str, handler) -> wx.BoxSizer:
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         slider = wx.Slider(self, wx.ID_ANY, 0, -180, 180)
-        self.Bind(wx.EVT_SCROLL, handler, slider)
+        slider.Bind(wx.EVT_SCROLL, handler)
         yaw_text = wx.StaticText(self, wx.ID_ANY, text)
         yaw_text.SetFont(self.font)
         hbox.Add(slider, 1, wx.ALL | wx.EXPAND)
         hbox.Add(yaw_text, 1, wx.ALL | wx.EXPAND)
+        return hbox
+
+    def _get_pos_hbox(self, text: str, handler,
+                      default_value: float) -> wx.BoxSizer:
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        pos = floatspin.FloatSpin(self, wx.ID_ANY, value=default_value,
+                                  increment=0.5, digits=2)
+        pos.Bind(floatspin.EVT_FLOATSPIN, handler)
+        yaw_text = wx.StaticText(self, wx.ID_ANY, text)
+        yaw_text.SetFont(self.font)
+        hbox.Add(pos, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
+        hbox.Add(yaw_text, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
         return hbox
 
     def _change_wireframe(self, event) -> None:
@@ -231,6 +254,18 @@ class ObjSettingsPanel(wx.Panel):
 
     def _change_roll(self, event) -> None:
         self.obj.set_z_rotation(event.Int)
+
+    def _change_x_pos(self, event) -> None:
+        tmp = event.GetEventObject()
+        self.obj.set_pos(tmp.Value, self.obj.pos[1], self.obj.pos[2])
+
+    def _change_y_pos(self, event) -> None:
+        tmp = event.GetEventObject()
+        self.obj.set_pos(self.obj.pos[0], tmp.Value, self.obj.pos[2])
+
+    def _change_z_pos(self, event) -> None:
+        tmp = event.GetEventObject()
+        self.obj.set_pos(self.obj.pos[0], self.obj.pos[1], tmp.Value)
 
 
 class MyFrame2(wx.Frame):
@@ -251,12 +286,12 @@ class MyFrame2(wx.Frame):
 
         for obj in objs:
             panel = ObjSettingsPanel(scrollbar, obj)
-            vbox.Add(panel, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 10)
+            vbox.Add(panel, 0, wx.EXPAND | wx.ALL, 10)
 
         scrollbar.SetSizer(vbox)
 
         hbox.Add(self.gl_panel, proportion=24, flag=wx.EXPAND)
-        hbox.Add(scrollbar, proportion=7, flag=wx.EXPAND)
+        hbox.Add(scrollbar, proportion=7, flag=wx.EXPAND | wx.ALL, border=5)
 
         self.panel.SetSizer(hbox)
 

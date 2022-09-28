@@ -127,9 +127,10 @@ class Object:
     def translate(self, tx, ty, tz):
         self.pos += np.array([tx, ty, tz], dtype=np.float32)
 
-    @_compute_transform
+    # @_compute_transform
     def set_pos(self, x, y, z):
         self.pos = np.array([x, y, z], dtype=np.float32)
+        self._calculate_transform_matrix()
 
     @_compute_transform
     def set_x_rotation(self, degree):
