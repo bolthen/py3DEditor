@@ -176,7 +176,7 @@ class OpenGLCanvas(glcanvas.GLCanvas):
 
 class ObjSettingsPanel(wx.Panel):
     FONT_SIZE = 12
-    FONT_COLOR = '#000000'
+    FONT_COLOR = '#ecebed'
 
     def __init__(self, parent, obj: Object):
         wx.Panel.__init__(self, parent, style=wx.SIMPLE_BORDER)
@@ -185,7 +185,7 @@ class ObjSettingsPanel(wx.Panel):
         self.main_vbox = wx.BoxSizer(wx.VERTICAL)
 
         self.title_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
-        self.title_font.SetPointSize(self.FONT_SIZE * 1.5)
+        self.title_font.SetPointSize(self.FONT_SIZE * 1.25)
         self.font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         self.font.SetPointSize(self.FONT_SIZE)
 
@@ -280,7 +280,7 @@ class MyFrame2(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.panel = wx.Panel(self)
         self.gl_panel = OpenGLCanvas(self.panel, self)
-        self.SetBackgroundColour('#0F385C')
+        self.SetBackgroundColour('#464544')
         # self.gl_panel = GlPanel(self.panel, self)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
