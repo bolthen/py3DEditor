@@ -92,10 +92,11 @@ class Object:
 
         return new_func
 
-    def __init__(self, pos: list, scale=1):
+    def __init__(self, pos: list, shader: Shader, scale=1):
         self.meshes = []
         self.wireframe = False
         self.scale = scale
+        self.shader = shader
         self.transform = None
         self.pos = np.array(pos, dtype=np.float32)
         self.yaw = 0
@@ -103,14 +104,14 @@ class Object:
         self.roll = 0
         self._calculate_transform_matrix()
 
-    def draw(self, shader: Shader):
+    def draw(self):
         if self.wireframe:
-            shader.enable_wireframe()
+            self.shader.enable_wireframe()
         else:
-            shader.disable_wireframe()
-        shader.set_uniforms(model=self.transform)
+            self.shader.disable_wireframe()
+        self.shader.set_uniforms(model=self.transform)
         for mesh in self.meshes:
-            mesh.draw(shader)
+            mesh.draw(self.shader)
 
     def _calculate_transform_matrix(self):
         self.transform = \
@@ -127,10 +128,9 @@ class Object:
     def translate(self, tx, ty, tz):
         self.pos += np.array([tx, ty, tz], dtype=np.float32)
 
-    # @_compute_transform
+    @_compute_transform
     def set_pos(self, x, y, z):
         self.pos = np.array([x, y, z], dtype=np.float32)
-        self._calculate_transform_matrix()
 
     @_compute_transform
     def set_x_rotation(self, degree):
@@ -164,9 +164,9 @@ class Vertex:
 
 class Sphere(Object):
     def __init__(self, radius: int, sector_count: int, stack_count: int,
-                 start_pos: list, texture_name='', scale=1,
+                 start_pos: list, shader: Shader, texture_name='', scale=1,
                  should_flip_texture=False):
-        super().__init__(start_pos, scale)
+        super().__init__(start_pos, shader, scale)
         self.radius = radius
         self.n_sectors = sector_count
         self.n_stacks = stack_count
@@ -175,7 +175,7 @@ class Sphere(Object):
         self._generate(should_flip_texture)
 
     def get_obj_name(self):
-        return "Sphere"
+        return "sphere"
 
     def _generate(self, flip):
         sector_step = 2 * math.pi / self.n_sectors
