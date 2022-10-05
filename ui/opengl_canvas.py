@@ -109,10 +109,11 @@ class OpenGLCanvas(glcanvas.GLCanvas):
                                    shaders_location / 'light_fragment.glsl')
 
         self.all_shaders = [self.active_shader, self.light_shader]
-        self.obj_handler.open_new_model(
+        model = self.obj_handler.open_new_model(
             self.panel.get_path_obj_file(),
             self.camera,
             self.active_shader)
+        self.panel.settings_panel.add_obj(model)
 
         self._update_projection_matrix()
 
