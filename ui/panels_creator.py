@@ -14,9 +14,7 @@ class ObjectPanelsCreator:
         self.wireframe_checkbox = None
         self.panel = None
 
-    def get_obj_gui_panels(self, panel: wx, obj=None) -> list:
-        if self.obj is None:
-            self.obj = obj
+    def get_obj_gui_panels(self, panel: wx, sizer: wx.BoxSizer) -> list:
         self.panel = panel
 
         panels = []
@@ -46,6 +44,15 @@ class ObjectPanelsCreator:
                                    self.obj.pos[1])
         z_pos = self._get_pos_hbox("z position", self._change_z_pos,
                                    self.obj.pos[2])
+
+        sizer.Add(title, 0, wx.ALL | wx.CENTER, 5)
+        sizer.Add(self.wireframe_checkbox, 0, wx.ALL, 5)
+        sizer.Add(x_pos, 0, wx.ALL, 5)
+        sizer.Add(y_pos, 0, wx.ALL, 5)
+        sizer.Add(z_pos, 0, wx.ALL, 5)
+        sizer.Add(pitch, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(yaw, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(roll, 0, wx.ALL | wx.EXPAND, 5)
 
         panels += [title, self.wireframe_checkbox, pitch, yaw,
                    roll, x_pos, y_pos, z_pos]
