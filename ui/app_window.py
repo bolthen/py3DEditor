@@ -1,5 +1,4 @@
 import pathlib
-
 import wx
 import sys
 from ui.opengl_canvas import OpenGLCanvas

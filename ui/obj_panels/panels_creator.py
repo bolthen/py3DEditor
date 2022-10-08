@@ -1,20 +1,20 @@
 import wx
 from wx.lib.agw import floatspin
-
-from shapes import Object
+from wx.lib import scrolledpanel
 
 
 class ObjectPanelsCreator:
     FONT_SIZE = 12
     FONT_COLOR = '#ecebed'
 
-    def __init__(self, obj=None):
+    def __init__(self, obj):
         self.obj = obj
         self.font = None
         self.wireframe_checkbox = None
         self.panel = None
 
-    def get_obj_gui_panels(self, panel: wx, sizer: wx.BoxSizer) -> list:
+    def get_obj_gui_panels(self, panel: wx.lib.scrolledpanel,
+                           sizer: wx.BoxSizer) -> list:
         self.panel = panel
 
         panels = []
@@ -45,6 +45,8 @@ class ObjectPanelsCreator:
         z_pos = self._get_pos_hbox("z position", self._change_z_pos,
                                    self.obj.pos[2])
 
+        scale = self._get_scale_hbox()
+
         sizer.Add(title, 0, wx.ALL | wx.CENTER, 5)
         sizer.Add(self.wireframe_checkbox, 0, wx.ALL, 5)
         sizer.Add(x_pos, 0, wx.ALL, 5)
@@ -53,19 +55,40 @@ class ObjectPanelsCreator:
         sizer.Add(pitch, 0, wx.ALL | wx.EXPAND, 5)
         sizer.Add(yaw, 0, wx.ALL | wx.EXPAND, 5)
         sizer.Add(roll, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(scale, 0, wx.ALL | wx.EXPAND, 5)
 
         panels += [title, self.wireframe_checkbox, pitch, yaw,
                    roll, x_pos, y_pos, z_pos]
         return panels
 
+    def _get_scale_hbox(self) -> wx.BoxSizer:
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        spin = floatspin.FloatSpin(self.panel, wx.ID_ANY, value=self.obj.scale,
+                                   increment=0.1, digits=3)
+        spin.Bind(floatspin.EVT_FLOATSPIN, self._change_scale)
+        spin.SetForegroundColour(self.FONT_COLOR)
+
+        text = wx.StaticText(self.panel, wx.ID_ANY, "scale")
+        text.SetFont(self.font)
+        text.SetForegroundColour(self.FONT_COLOR)
+
+        hbox.Add(spin, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
+        hbox.Add(text, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
+
+        return hbox
+
     def _get_angle_hbox(self, text: str, handler) -> wx.BoxSizer:
         hbox = wx.BoxSizer(wx.HORIZONTAL)
+
         slider = wx.Slider(self.panel, wx.ID_ANY, 0, -180, 180)
         slider.Bind(wx.EVT_SCROLL, handler)
+        slider.SetForegroundColour(self.FONT_COLOR)
+
         yaw_text = wx.StaticText(self.panel, wx.ID_ANY, text)
         yaw_text.SetFont(self.font)
         yaw_text.SetForegroundColour(self.FONT_COLOR)
-        slider.SetForegroundColour(self.FONT_COLOR)
+
         hbox.Add(slider, 1, wx.ALL | wx.EXPAND)
         hbox.Add(yaw_text, 1, wx.ALL | wx.EXPAND)
         return hbox
@@ -73,15 +96,18 @@ class ObjectPanelsCreator:
     def _get_pos_hbox(self, text: str, handler,
                       default_value: float) -> wx.BoxSizer:
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        pos = floatspin.FloatSpin(self.panel, wx.ID_ANY, value=default_value,
-                                  increment=0.5, digits=2)
-        pos.Bind(floatspin.EVT_FLOATSPIN, handler)
-        yaw_text = wx.StaticText(self.panel, wx.ID_ANY, text)
-        yaw_text.SetFont(self.font)
-        yaw_text.SetForegroundColour(self.FONT_COLOR)
-        pos.SetForegroundColour(self.FONT_COLOR)
-        hbox.Add(pos, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
-        hbox.Add(yaw_text, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
+
+        spin = floatspin.FloatSpin(self.panel, wx.ID_ANY, value=default_value,
+                                   increment=0.5, digits=2)
+        spin.Bind(floatspin.EVT_FLOATSPIN, handler)
+        spin.SetForegroundColour(self.FONT_COLOR)
+
+        text = wx.StaticText(self.panel, wx.ID_ANY, text)
+        text.SetFont(self.font)
+        text.SetForegroundColour(self.FONT_COLOR)
+
+        hbox.Add(spin, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
+        hbox.Add(text, 1, wx.RIGHT | wx.LEFT | wx.EXPAND, 5)
         return hbox
 
     def _change_wireframe(self, event) -> None:
@@ -109,3 +135,10 @@ class ObjectPanelsCreator:
     def _change_z_pos(self, event) -> None:
         tmp = event.GetEventObject()
         self.obj.set_pos(self.obj.pos[0], self.obj.pos[1], tmp.Value)
+
+    def _change_scale(self, event):
+        scale = event.GetEventObject()
+        if scale.Value < 0.001:
+            scale.SetValue(0.001)
+        else:
+            self.obj.set_scale(scale.Value)

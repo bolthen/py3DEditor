@@ -2,7 +2,7 @@ import wx
 from wx.lib.mixins import listctrl
 from wx.lib import scrolledpanel
 
-from ui.panels_creator import ObjectPanelsCreator
+from ui.obj_panels.new_obj_settings import NewObjectPanelsCreator
 from shapes import Object
 
 
@@ -45,26 +45,27 @@ class ObjSettingsPanel(wx.Panel):
         self.splitter = wx.SplitterWindow(self, 0, style=wx.SP_LIVE_UPDATE)
         self.list_ctrl = ObjsListCtrl(self.splitter, self)
 
-        self.scrollbar = scrolledpanel.ScrolledPanel(self.splitter, wx.ID_ANY,
+        scrollbar = scrolledpanel.ScrolledPanel(self.splitter, wx.ID_ANY,
                                                      style=wx.SIMPLE_BORDER)
-        self.scrollbar.SetupScrolling()
-        self.scroll_vbox = wx.BoxSizer(wx.VERTICAL)
-        self.scrollbar.SetSizer(self.scroll_vbox)
+        scrollbar.SetupScrolling()
+        scroll_vbox = wx.BoxSizer(wx.VERTICAL)
+        scrollbar.SetSizer(scroll_vbox)
+        panels = NewObjectPanelsCreator().get_obj_gui_panels(scrollbar,
+                                                             scroll_vbox)
+        self.obj_to_scroll = {0: scrollbar}
 
         self.splitter.SplitHorizontally(self.list_ctrl,
-                                        self.scrollbar,
+                                        scrollbar,
                                         self._splitter_size)
 
         self.main_vbox.Add(self.splitter, wx.ID_ANY, flag=wx.EXPAND)
         self.SetSizer(self.main_vbox)
 
-        self.obj_to_scroll = {0: self.scrollbar}
         self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGING,
                            self._on_splitter_resize)
 
     def add_obj(self, obj: Object) -> None:
         self.list_ctrl.add_object(obj.get_obj_name())
-        self.splitter.Unsplit(self.scrollbar)
 
         new_scroll = scrolledpanel.ScrolledPanel(self.splitter, wx.ID_ANY,
                                                  style=wx.SIMPLE_BORDER)
@@ -72,8 +73,8 @@ class ObjSettingsPanel(wx.Panel):
         new_sizer = wx.BoxSizer(wx.VERTICAL)
         new_scroll.SetSizer(new_sizer)
 
-        panels = ObjectPanelsCreator(obj).get_obj_gui_panels(new_scroll,
-                                                             new_sizer)
+        panels = obj.get_settings_panels(new_scroll, new_sizer)
+
         self.obj_to_scroll[len(self.obj_to_scroll)] = new_scroll
         self.update_obj_settings(len(self.obj_to_scroll) - 1)
 

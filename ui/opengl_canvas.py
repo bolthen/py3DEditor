@@ -109,11 +109,13 @@ class OpenGLCanvas(glcanvas.GLCanvas):
                                    shaders_location / 'light_fragment.glsl')
 
         self.all_shaders = [self.active_shader, self.light_shader]
-        model = self.obj_handler.open_new_model(
-            self.panel.get_path_obj_file(),
-            self.camera,
-            self.active_shader)
-        self.panel.settings_panel.add_obj(model)
+
+        for i in range(5):
+            model = self.obj_handler.open_new_model(
+                self.panel.get_path_obj_file(),
+                self.camera,
+                self.active_shader)
+            self.panel.settings_panel.add_obj(model)
 
         self._update_projection_matrix()
 
@@ -148,6 +150,7 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         current_frame = self.time.Time()
         self.delta_time = (current_frame - self.last_frame) / 1000
         self.last_frame = current_frame
+        # print(1 / self.delta_time)
 
     def _update_projection_matrix(self) -> None:
         matrix = self.camera.get_projection(self.aspect_ratio)

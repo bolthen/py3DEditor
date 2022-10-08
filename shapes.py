@@ -1,10 +1,14 @@
 import math
 
 import numpy as np
+import wx
+
 import matrix_functions as matrices
 
 from mesh import Material, Mesh
 from shader import Shader
+from ui.obj_panels.panels_creator import ObjectPanelsCreator
+from ui.obj_panels.sphere_settings import SpherePanelsCreator
 
 cube = np.array([
     -0.5, -0.5, -0.5, 0.0, 0.0,
@@ -144,6 +148,15 @@ class Object:
     def set_z_rotation(self, degree):
         self.roll = degree
 
+    @_compute_transform
+    def set_scale(self, value):
+        self.scale = value
+
+    def get_settings_panels(self, panel: wx, sizer: wx.BoxSizer) -> list:
+        base_panels = ObjectPanelsCreator(self).get_obj_gui_panels(panel,
+                                                                   sizer)
+        return base_panels
+
 
 class Vertex:
     def __init__(self, s=0, t=0, n1=0, n2=0, n3=0, x=0, y=0, z=0):
@@ -172,12 +185,13 @@ class Sphere(Object):
         self.n_stacks = stack_count
         self.vertices = []
         self.texture = texture_name
-        self._generate(should_flip_texture)
+        self.texture_flipped = should_flip_texture
+        self.generate()
 
     def get_obj_name(self):
         return "sphere"
 
-    def _generate(self, flip):
+    def generate(self):
         sector_step = 2 * math.pi / self.n_sectors
         stack_step = math.pi / self.n_stacks
         vertices = []
@@ -206,9 +220,9 @@ class Sphere(Object):
 
                 vertices.append(vert)
 
-        self._vertices_to_triangles(vertices, flip)
+        self._vertices_to_triangles(vertices)
 
-    def _vertices_to_triangles(self, vertices: list, flip):
+    def _vertices_to_triangles(self, vertices: list):
         for i in range(self.n_stacks + 1):
             for j in range(self.n_sectors + 1):
                 idx1 = i * self.n_sectors + j
@@ -222,7 +236,8 @@ class Sphere(Object):
                     self._add_vertex_by_idx(vertices, idx1, idx2, idx3)
                     self._add_vertex_by_idx(vertices, idx1, idx1 + 1, idx3)
 
-        material = Material(self.vertices, 0, self.texture, flip)
+        material = Material(self.vertices, 0, self.texture,
+                            self.texture_flipped)
         self.meshes.append(Mesh([material], np.array([])))
 
     def _add_vertex_by_idx(self, vertices, idx1, idx2, idx3):
@@ -232,3 +247,6 @@ class Sphere(Object):
         self.vertices += vertices[idx2].to_opengl_format()
         self.vertices += vertices[idx3].to_opengl_format()
 
+    def get_settings_panels(self, panel: wx, sizer: wx.BoxSizer) -> list:
+        panels = SpherePanelsCreator(self).get_obj_gui_panels(panel, sizer)
+        return panels
