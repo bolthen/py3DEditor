@@ -1,7 +1,5 @@
 import wx
 from wx.lib import scrolledpanel
-
-# from shapess import Sphere
 from ui.obj_panels.panels_creator import ObjectPanelsCreator
 
 

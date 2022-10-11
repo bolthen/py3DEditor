@@ -4,3 +4,4 @@ base.py
 opengl_shaders/lines.glsl
 *.zip
 *.rar
+boba_fett/

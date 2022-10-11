@@ -2,6 +2,7 @@ import wx
 from wx.lib.mixins import listctrl
 from wx.lib import scrolledpanel
 
+from models_handler import ModelsHandler
 from ui.obj_panels.new_obj_settings import NewObjectPanelsCreator
 from shapes import Object
 
@@ -36,7 +37,7 @@ class ObjSettingsPanel(wx.Panel):
     FONT_SIZE = 12
     FONT_COLOR = '#ecebed'
 
-    def __init__(self, parent):
+    def __init__(self, parent, obj_handler: ModelsHandler):
         wx.Panel.__init__(self, parent, wx.ID_ANY, style=wx.SIMPLE_BORDER)
         self.actual_obj_idx = 0
         self._splitter_size = 100
@@ -46,12 +47,12 @@ class ObjSettingsPanel(wx.Panel):
         self.list_ctrl = ObjsListCtrl(self.splitter, self)
 
         scrollbar = scrolledpanel.ScrolledPanel(self.splitter, wx.ID_ANY,
-                                                     style=wx.SIMPLE_BORDER)
+                                                style=wx.SIMPLE_BORDER)
         scrollbar.SetupScrolling()
         scroll_vbox = wx.BoxSizer(wx.VERTICAL)
         scrollbar.SetSizer(scroll_vbox)
-        panels = NewObjectPanelsCreator().get_obj_gui_panels(scrollbar,
-                                                             scroll_vbox)
+        panels = NewObjectPanelsCreator(obj_handler, self).get_obj_gui_panels(
+            scrollbar, scroll_vbox)
         self.obj_to_scroll = {0: scrollbar}
 
         self.splitter.SplitHorizontally(self.list_ctrl,
