@@ -1,11 +1,9 @@
 import pathlib
 
-import numpy as np
-import wx
-
 from pathlib import Path
 from camera import Camera
-from model import Model
+from object.model import Model
+from object.sphere import Sphere
 from shader import Shader
 
 
@@ -27,13 +25,20 @@ class ModelsHandler:
         self.all_shaders += [self.model_shader, self.light_shader]
 
         # TODO setting light pos and light color
-        self.model_shader.set_uniforms(lightColor=[1, 1, 1], lightPos=[0, 0, 0])
+        self.model_shader.set_uniforms(lightColor=[1, 1, 1],
+                                       lightPos=[0, 0, 0])
 
     def open_new_model(self, path: pathlib.Path) -> Model:
         start_pos = self.camera.pos + self.camera.view_dir * 5
         model = Model(path, start_pos, self.model_shader)
         self.objects.append(model)
         return model
+
+    def create_new_sphere(self, texture: pathlib.Path):
+        start_pos = self.camera.pos + self.camera.view_dir * 5
+        sphere = Sphere(5, 50, 50, start_pos, self.model_shader, texture)
+        self.objects.append(sphere)
+        return sphere
 
     def draw_all_objects(self) -> None:
         for obj in self.objects:

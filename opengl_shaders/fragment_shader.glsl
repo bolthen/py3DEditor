@@ -19,7 +19,7 @@ void main()
 {
     vec2 newTextures = vec2(ourTextureCoord.x, 1.0f - ourTextureCoord.y);
 
-    float ambientStrength = 0.1f;
+    float ambientStrength = 0.2f;
     vec3 ambient = ambientStrength * lightColor;
 
     vec3 norm = normalize(ourNormals);

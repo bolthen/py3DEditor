@@ -7,7 +7,7 @@ class Texture:
         self.id = id_
         self.name = texture_name
         self.texture = None
-        if texture_name != '':
+        if texture_name != '' and texture_name is not None:
             self.texture = self._load_texture(should_flip)
 
     def _load_texture(self, should_flip):
@@ -42,7 +42,7 @@ class Texture:
                 )
 
     def activate(self, shader: Shader, texture_var_name: str):
-        if self.name == '':
+        if self.name == '' or self.texture is None:
             return
         glActiveTexture(GL_TEXTURE0 + self.id)
         glBindTexture(GL_TEXTURE_2D, self.texture)

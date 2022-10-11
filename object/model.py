@@ -1,14 +1,14 @@
 from pywavefront import *
 
 from mesh import *
-from shapes import Object
+from object.base_object import BaseObject
 from matrix_functions import concatenate
 
 import numpy as np
 from pathlib import Path
 
 
-class Model(Object):
+class Model(BaseObject):
     def __init__(self, path: Path, start_pos: list, shader: Shader, scale=1):
         super().__init__(start_pos, shader, scale)
         self.path = path

@@ -4,7 +4,7 @@ from wx.lib import scrolledpanel
 
 from models_handler import ModelsHandler
 from ui.obj_panels.new_obj_settings import NewObjectPanelsCreator
-from shapes import Object
+from object.base_object import BaseObject
 
 
 class ObjsListCtrl(wx.ListCtrl, listctrl.ListCtrlAutoWidthMixin):
@@ -65,7 +65,7 @@ class ObjSettingsPanel(wx.Panel):
         self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGING,
                            self._on_splitter_resize)
 
-    def add_obj(self, obj: Object) -> None:
+    def add_obj(self, obj: BaseObject) -> None:
         self.list_ctrl.add_object(obj.get_obj_name())
 
         new_scroll = scrolledpanel.ScrolledPanel(self.splitter, wx.ID_ANY,
