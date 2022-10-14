@@ -9,25 +9,39 @@ class NewObjectPanelsCreator:
     def __init__(self, obj_handler: ModelsHandler, parent):
         self.obj_handler = obj_handler
         self.parent = parent
+        self.new_model_button = None
+        self.new_sphere_button = None
+        self.new_custom_button = None
+        self.new_vertex_button = None
+
+        self.sizer = None
 
     def get_obj_gui_panels(self, panel: wx.lib.scrolledpanel,
                            sizer: wx.BoxSizer) -> list:
         panels = []
+        self.sizer = sizer
 
-        new_model = wx.Button(panel, wx.ID_ANY, "open new model")
-        new_model.Bind(wx.EVT_BUTTON, self._new_model_open)
+        self.new_model_button = wx.Button(panel, wx.ID_ANY, "open new model")
+        self.new_model_button.Bind(wx.EVT_BUTTON, self._new_model_open)
 
-        new_sphere = wx.Button(panel, wx.ID_ANY, "new sphere")
-        new_sphere.Bind(wx.EVT_BUTTON, self._new_sphere_create)
+        self.new_sphere_button = wx.Button(panel, wx.ID_ANY, "new sphere")
+        self.new_sphere_button.Bind(wx.EVT_BUTTON, self._new_sphere_create)
 
-        new_custom = wx.Button(panel, wx.ID_ANY, "create object")
-        new_custom.Bind(wx.EVT_BUTTON, self._new_sphere_create)
+        self.new_custom_button = wx.Button(panel, wx.ID_ANY, "create object")
+        self.new_custom_button.Bind(wx.EVT_BUTTON, self._new_custom_object)
 
-        sizer.Add(new_model, 0, wx.ALL | wx.EXPAND, 5)
-        sizer.Add(new_sphere, 0, wx.ALL | wx.EXPAND, 5)
-        sizer.Add(new_custom, 0, wx.ALL | wx.EXPAND, 5)
+        self.new_vertex_button = wx.Button(panel, wx.ID_ANY, "new vertex")
+        self.new_vertex_button.Bind(wx.EVT_BUTTON, self._spawn_new_vertex)
 
-        panels += [new_model, sizer]
+        sizer.Add(self.new_model_button, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(self.new_sphere_button, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(self.new_custom_button, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(self.new_vertex_button, 0, wx.ALL | wx.EXPAND, 5)
+
+        sizer.Hide(self.new_vertex_button)
+
+        panels += [self.new_model_button, self.new_sphere_button,
+                   self.new_custom_button, self.new_vertex_button]
         return panels
 
     def _new_model_open(self, event: CommandEvent) -> None:
@@ -61,4 +75,20 @@ class NewObjectPanelsCreator:
         self.parent.add_obj(model)
 
     def _new_custom_object(self, event):
-        pass
+        self._show_custom_object_buttons()
+        obj = self.obj_handler.create_new_custom()
+        self.parent.add_obj(obj)
+
+    def _show_custom_object_buttons(self):
+        self.sizer.Hide(self.new_model_button)
+        self.sizer.Hide(self.new_sphere_button)
+        self.sizer.Hide(self.new_custom_button)
+
+        self.sizer.Show(self.new_vertex_button)
+
+        self.sizer.Layout()
+
+    def _spawn_new_vertex(self, event):
+        self.obj_handler.add_new_vertex_to_custom_obj()
+
+

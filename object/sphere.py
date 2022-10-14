@@ -4,7 +4,7 @@ import wx
 
 from shader import Shader
 from object.vertex import Vertex
-from mesh import Material, Mesh
+from mesh import Material, Mesh, Texture
 from object.base_object import BaseObject
 from ui.obj_panels.sphere_settings import SpherePanelsCreator
 
@@ -18,8 +18,7 @@ class Sphere(BaseObject):
         self.n_sectors = sector_count
         self.n_stacks = stack_count
         self.vertices = []
-        self.texture = texture_name
-        self.texture_flipped = should_flip_texture
+        self.texture = Texture(0, texture_name, should_flip_texture)
         self.generate()
 
     def get_obj_name(self):
@@ -72,8 +71,7 @@ class Sphere(BaseObject):
                     self._add_vertex_by_idx(vertices, idx1, idx2, idx3)
                     self._add_vertex_by_idx(vertices, idx1, idx1 + 1, idx3)
 
-        material = Material(self.vertices, 0, self.texture,
-                            self.texture_flipped)
+        material = Material(self.vertices, 0, texture=self.texture)
         self.meshes.append(Mesh([material], np.array([])))
 
     def _add_vertex_by_idx(self, vertices, idx1, idx2, idx3):

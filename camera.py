@@ -77,7 +77,7 @@ class Camera:
                                 dtype='f4')
 
     def get_projection(self, aspect: float,
-                       min_distance=0.1, max_distance=100) -> np.ndarray:
+                       min_distance=0.1, max_distance=500) -> np.ndarray:
         return Matrix44.perspective_projection(
             self.fov, int(aspect), min_distance, max_distance, 'f4')
 

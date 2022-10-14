@@ -2,6 +2,7 @@ import pathlib
 
 from pathlib import Path
 from camera import Camera
+from object.custom import CustomObject
 from object.model import Model
 from object.sphere import Sphere
 from shader import Shader
@@ -13,7 +14,9 @@ class ModelsHandler:
         self.all_shaders = []
         self.model_shader = None
         self.light_shader = None
+        self.custom_shader = None
         self.camera = camera
+        self._active_custom_obj = None
 
     def init_shaders(self):
         shaders_location = Path(__file__).parent / 'opengl_shaders'
@@ -21,8 +24,11 @@ class ModelsHandler:
                                    shaders_location / 'fragment_shader.glsl')
         self.light_shader = Shader(shaders_location / 'light_vertex.glsl',
                                    shaders_location / 'light_fragment.glsl')
+        self.custom_shader = Shader(shaders_location / 'custom_vertex.glsl',
+                                    shaders_location / 'custom_fragment.glsl')
 
-        self.all_shaders += [self.model_shader, self.light_shader]
+        self.all_shaders += [self.model_shader, self.light_shader,
+                             self.custom_shader]
 
         # TODO setting light pos and light color
         self.model_shader.set_uniforms(lightColor=[1, 1, 1],
@@ -35,10 +41,21 @@ class ModelsHandler:
         return model
 
     def create_new_sphere(self, texture: pathlib.Path):
-        start_pos = self.camera.pos + self.camera.view_dir * 5
+        start_pos = self.camera.pos + self.camera.view_dir * 10
         sphere = Sphere(5, 50, 50, start_pos, self.model_shader, texture)
         self.objects.append(sphere)
         return sphere
+
+    def create_new_custom(self):
+        start_pos = self.camera.pos + self.camera.view_dir * 5
+        obj = CustomObject(start_pos, self.custom_shader)
+        self._active_custom_obj = obj
+        self.objects.append(obj)
+        return obj
+
+    def add_new_vertex_to_custom_obj(self):
+        start_pos = self.camera.pos
+        self._active_custom_obj.add_new_vertex(start_pos)
 
     def draw_all_objects(self) -> None:
         for obj in self.objects:
