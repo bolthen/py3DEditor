@@ -100,7 +100,8 @@ class NewObjectPanelsCreator:
     def _finish_creation(self, event):
         obj = self.obj_handler.finish_object_creation()
         self._hide_custom_object_buttons()
-        self.parent.add_obj(obj)
+        if obj.n_vertices >= 3:
+            self.parent.add_obj(obj)
 
     def _show_custom_object_buttons(self) -> None:
         self.sizer.Hide(self.new_model_button)

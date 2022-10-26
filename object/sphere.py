@@ -6,7 +6,7 @@ from shader import Shader
 from object.vertex import Vertex
 from mesh import Material, Mesh, Texture, MeshCustomObject
 from object.base_object import BaseObject
-from ui.obj_panels.sphere_settings import SpherePanelsCreator
+from ui.obj_panels.sphere_panel import SpherePanelsCreator
 
 
 class Sphere(BaseObject):

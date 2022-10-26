@@ -3,7 +3,7 @@ from wx.lib.mixins import listctrl
 from wx.lib import scrolledpanel
 
 from models_handler import ModelsHandler
-from ui.obj_panels.new_obj_settings import NewObjectPanelsCreator
+from ui.obj_panels.custom_obj_panel import NewObjectPanelsCreator
 from object.base_object import BaseObject
 
 
