@@ -41,8 +41,8 @@ class RedactorEngine:
         current_frame = self._time.Time()
         self.delta_time = (current_frame - self._last_frame) / 1000
         self._last_frame = current_frame
-        if self.delta_time != 0:
-            print(1 / self.delta_time)
+        # if self.delta_time != 0:
+        #     print(1 / self.delta_time)
 
     def update_view_matrices(self) -> None:
         matrix = self.camera.get_view_matrix()

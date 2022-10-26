@@ -1,6 +1,9 @@
 import pathlib
 
 from pathlib import Path
+
+import wx
+
 from camera import Camera
 from object.custom import CustomObject
 from object.model import Model
@@ -18,7 +21,7 @@ class ModelsHandler:
         self.camera = camera
         self._active_custom_obj = None
 
-    def init_shaders(self):
+    def init_shaders(self) -> None:
         shaders_location = Path(__file__).parent / 'opengl_shaders'
         self.model_shader = Shader(shaders_location / 'vertex_shader.glsl',
                                    shaders_location / 'fragment_shader.glsl')
@@ -40,22 +43,31 @@ class ModelsHandler:
         self.objects.append(model)
         return model
 
-    def create_new_sphere(self, texture: pathlib.Path):
+    def create_new_sphere(self, texture: pathlib.Path) -> Sphere:
         start_pos = self.camera.pos + self.camera.view_dir * 10
         sphere = Sphere(5, 50, 50, start_pos, self.model_shader, texture)
         self.objects.append(sphere)
         return sphere
 
-    def create_new_custom(self):
+    def create_new_custom(self) -> CustomObject:
         start_pos = self.camera.pos + self.camera.view_dir * 5
         obj = CustomObject(start_pos, self.custom_shader)
         self._active_custom_obj = obj
         self.objects.append(obj)
         return obj
 
-    def add_new_vertex_to_custom_obj(self):
-        start_pos = self.camera.pos
-        self._active_custom_obj.add_new_vertex(start_pos)
+    def add_new_vertex_to_custom_obj(self, colour: wx.Colour) -> None:
+        if self._active_custom_obj is None:
+            raise Exception()
+        start_pos = self.camera.pos + self.camera.view_dir * 5
+        self._active_custom_obj.add_new_vertex(start_pos, colour)
+
+    def finish_object_creation(self) -> CustomObject:
+        if self._active_custom_obj is None:
+            raise Exception()
+        obj = self._active_custom_obj
+        self._active_custom_obj = None
+        return obj
 
     def draw_all_objects(self) -> None:
         for obj in self.objects:

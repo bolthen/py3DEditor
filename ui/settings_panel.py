@@ -28,7 +28,7 @@ class ObjsListCtrl(wx.ListCtrl, listctrl.ListCtrlAutoWidthMixin):
 
     def on_item_pressed(self, event):
         item_id = event.Index
-        self.panel.update_obj_settings(item_id)
+        self.panel.update_obj_settings(item_id + 1)
         self.panel.Refresh()
         self.Refresh()
 
@@ -39,7 +39,6 @@ class ObjSettingsPanel(wx.Panel):
 
     def __init__(self, parent, obj_handler: ModelsHandler):
         wx.Panel.__init__(self, parent, wx.ID_ANY, style=wx.SIMPLE_BORDER)
-        self.actual_obj_idx = 0
         self._splitter_size = 200
         self.main_vbox = wx.BoxSizer(wx.VERTICAL)
         self.splitter = wx.SplitterWindow(self, 0, style=wx.SP_LIVE_UPDATE)
@@ -63,7 +62,8 @@ class ObjSettingsPanel(wx.Panel):
         self.main_vbox.Add(self.splitter, wx.ID_ANY, flag=wx.EXPAND)
         self.SetSizer(self.main_vbox)
 
-        self.obj_to_scroll = {0: scrollbar}
+        self.obj_to_scroll = {1: scrollbar}
+        self.actual_obj_idx = 1
 
     def add_obj(self, obj: BaseObject) -> None:
         self.list_ctrl.add_object(obj.get_obj_name())
@@ -76,8 +76,9 @@ class ObjSettingsPanel(wx.Panel):
 
         panels = obj.get_settings_panels(new_scroll, new_sizer)
 
-        self.obj_to_scroll[len(self.obj_to_scroll)] = new_scroll
-        self.update_obj_settings(len(self.obj_to_scroll) - 1)
+        self.obj_to_scroll[len(self.obj_to_scroll) + 1] = new_scroll
+        self.list_ctrl.Select(len(self.obj_to_scroll) - 1)
+        # self.list_ctrl.Focus(len(self.obj_to_scroll) - 1)
 
     def update_obj_settings(self, idx: int) -> None:
         self._hide_scroll(self.actual_obj_idx)

@@ -29,4 +29,5 @@ void main()
     vec4 objectColor = vec4(ourColors, 1.0f);
 
     color = objectColor * vec4(ambient + diffuse + specular, 1.0f);
+    color = vec4(ourColors[0] / 255.0f, ourColors[1] / 255.0f, ourColors[2] / 255.0f, 1.0f);
 }

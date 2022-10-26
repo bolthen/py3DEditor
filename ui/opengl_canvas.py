@@ -57,11 +57,11 @@ class OpenGLCanvas(glcanvas.GLCanvas):
         self.SwapBuffers()
 
     def init_gl(self) -> None:
-        self.engine.update_projection_matrix(self.aspect_ratio)
         self.engine.init_gl()
 
         glClearColor(125 / 255, 125 / 255, 125 / 255, 1)
         glEnable(GL_DEPTH_TEST)
+        self.engine.update_projection_matrix(self.aspect_ratio)
 
     def on_mouse_move(self, event) -> None:
         if self.mouse_input:
