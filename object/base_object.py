@@ -1,8 +1,8 @@
 import numpy as np
 import wx
 
-import matrix_functions as matrices
-from shader import Shader
+from utilities import matrix_functions as matrices
+from utilities.shader import Shader
 from ui.obj_panels.panels_creator import ObjectPanelsCreator
 
 

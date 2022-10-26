@@ -1,9 +1,9 @@
 import wx
-import matrix_functions as matrices
+from utilities import matrix_functions as matrices
 
-from mesh import Material, MeshCustomObject
+from utilities.mesh import Material, MeshCustomObject
 from object.base_object import BaseObject
-from shader import Shader
+from utilities.shader import Shader
 
 
 class CustomObject(BaseObject):

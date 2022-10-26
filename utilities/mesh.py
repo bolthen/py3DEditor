@@ -1,6 +1,5 @@
-import numpy as np
 import pygame
-from shader import *
+from utilities.shader import *
 
 
 class Texture:
@@ -78,12 +77,15 @@ class Mesh:
         '''
         vertices: format 'T2F_N3F_V3F'
         '''
+        # https://docs.gl/gl4/glGenVertexArrays
         self.VAO = glGenVertexArrays(1)
+        # https://docs.gl/gl4/glGenBuffers
         self.VBO = glGenBuffers(1)
         self.EBO = glGenBuffers(1)
 
         vertices = self._get_all_vertices()
 
+        # https://docs.gl/gl3/glBindVertexArray
         glBindVertexArray(self.VAO)
         glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
 
@@ -101,6 +103,7 @@ class Mesh:
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * vertices.itemsize,
                               ctypes.c_void_p(5 * vertices.itemsize))
 
+        # https://docs.gl/gl4/glEnableVertexAttribArray
         glEnableVertexAttribArray(0)
         glEnableVertexAttribArray(1)
         glEnableVertexAttribArray(2)

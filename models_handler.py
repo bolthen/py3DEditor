@@ -5,7 +5,7 @@ from camera import Camera
 from object.custom import CustomObject
 from object.model import Model
 from object.sphere import Sphere, ColorSphere
-from shader import Shader
+from utilities.shader import Shader
 from collections import deque
 
 

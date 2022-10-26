@@ -1,6 +1,6 @@
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileShader, compileProgram
-from matrix_functions import concatenate
+from utilities.matrix_functions import concatenate
 import numpy as np
 
 
@@ -90,6 +90,7 @@ class Shader:
             with open(vertex_path, mode='r', encoding='UTF-8') as vertex_src, \
                     open(fragment_path, 'r') as fragment_src:
 
+                # https://docs.gl/gl4/glCompileShader
                 vertex = compileShader(vertex_src.read(), GL_VERTEX_SHADER)
                 if glGetShaderiv(vertex, GL_COMPILE_STATUS) is False:
                     raise ShaderException('Vertex Shader Error', vertex)
@@ -113,6 +114,7 @@ class Shader:
 
         return program
 
+    # https://docs.gl/gl4/glGetUniformLocation
     def _get_uniforms_locations(self) -> dict:
         form2pos = {
             'time': glGetUniformLocation(self.program,

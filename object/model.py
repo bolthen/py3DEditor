@@ -1,8 +1,8 @@
 from pywavefront import *
 
-from mesh import *
+from utilities.mesh import *
 from object.base_object import BaseObject
-from matrix_functions import concatenate
+from utilities.matrix_functions import concatenate
 
 import numpy as np
 from pathlib import Path

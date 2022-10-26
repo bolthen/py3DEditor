@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 import wx as wx
-import matrix_functions as matrices
+from utilities import matrix_functions as matrices
 
 from pyrr import Matrix44
 from PyQt5.QtCore import Qt
