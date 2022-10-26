@@ -1,6 +1,7 @@
 .idea/
 __pycache__
 base.py
-programs/lines.glsl
+opengl_shaders/lines.glsl
 *.zip
 *.rar
+boba_fett/

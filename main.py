@@ -1,5 +1,4 @@
-from app_window import MyApp
-
+from ui.app_window import MyApp
 
 if __name__ == '__main__':
     app = MyApp()

@@ -2,24 +2,17 @@
 
 out vec4 color;
 
-in vec2 ourTextureCoord;
+in vec3 ourColors;
 in vec3 ourNormals;
 in vec3 worldFragPos;
 
-uniform sampler2D mainTexture;
-uniform sampler2D firstTexture;
-uniform sampler2D secondTexture;
-uniform vec2 resolution;
-uniform float time;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 
 void main()
 {
-    vec2 newTextures = vec2(ourTextureCoord.x, 1.0f - ourTextureCoord.y);
-
-    float ambientStrength = 0.3f;
+    float ambientStrength = 0.6f;
     vec3 ambient = ambientStrength * lightColor;
 
     vec3 norm = normalize(ourNormals);
@@ -33,7 +26,8 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0), 32);
     vec3 specular = specularStrength * spec * lightColor;
 
-    vec4 objectColor = texture(mainTexture, newTextures);
+    vec4 objectColor = vec4(ourColors, 1.0f);
 
     color = objectColor * vec4(ambient + diffuse + specular, 1.0f);
+    color = vec4(ourColors[0] / 255.0f, ourColors[1] / 255.0f, ourColors[2] / 255.0f, 1.0f);
 }

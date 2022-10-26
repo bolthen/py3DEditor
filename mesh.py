@@ -1,3 +1,4 @@
+import numpy as np
 import pygame
 from shader import *
 
@@ -7,7 +8,7 @@ class Texture:
         self.id = id_
         self.name = texture_name
         self.texture = None
-        if texture_name != '':
+        if texture_name != '' and texture_name is not None:
             self.texture = self._load_texture(should_flip)
 
     def _load_texture(self, should_flip):
@@ -42,7 +43,7 @@ class Texture:
                 )
 
     def activate(self, shader: Shader, texture_var_name: str):
-        if self.name == '':
+        if self.name == '' or self.texture is None:
             return
         glActiveTexture(GL_TEXTURE0 + self.id)
         glBindTexture(GL_TEXTURE_2D, self.texture)
@@ -52,14 +53,15 @@ class Texture:
 
 class Material:
     def __init__(self, vertices: list,
-                 model_idx: int, texture_name: str, flip_texture=False):
-        '''
-        :param vertices: format 'T2F_N3F_V3F'
-        '''
+                 model_idx: int, texture_name='', flip_texture=False,
+                 texture=None):
 
         self.vertices = vertices
         self.model_idx = model_idx
-        self.texture = Texture(model_idx, texture_name, flip_texture)
+        if texture is not None and texture.__class__ is Texture:
+            self.texture = texture
+        else:
+            self.texture = Texture(model_idx, texture_name, flip_texture)
 
     def activate_texture(self, shader: Shader, texture_var_name='mainTexture'):
         self.texture.activate(shader, texture_var_name)
@@ -73,6 +75,9 @@ class Mesh:
         self._init_buffers()
 
     def _init_buffers(self):
+        '''
+        vertices: format 'T2F_N3F_V3F'
+        '''
         self.VAO = glGenVertexArrays(1)
         self.VBO = glGenBuffers(1)
         self.EBO = glGenBuffers(1)
@@ -125,4 +130,39 @@ class Mesh:
             current_idx += step
 
         glBindTexture(GL_TEXTURE_2D, 0)
+        glBindVertexArray(0)
+
+
+class MeshCustomObject(Mesh):
+    def __init__(self, material):
+        super(MeshCustomObject, self).__init__([material], np.array([]))
+
+    def _init_buffers(self):
+        self.VAO = glGenVertexArrays(1)
+        self.VBO = glGenBuffers(1)
+        self.EBO = glGenBuffers(1)
+
+    def update_buffers(self):
+        # vertices: format 'C3F_N3F_V3F'
+
+        vertices = self._get_all_vertices()
+
+        glBindVertexArray(self.VAO)
+        glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
+
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * vertices.itemsize,
+                              ctypes.c_void_p(0))
+
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * vertices.itemsize,
+                              ctypes.c_void_p(3 * vertices.itemsize))
+
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * vertices.itemsize,
+                              ctypes.c_void_p(6 * vertices.itemsize))
+
+        glEnableVertexAttribArray(0)
+        glEnableVertexAttribArray(1)
+        glEnableVertexAttribArray(2)
+
         glBindVertexArray(0)

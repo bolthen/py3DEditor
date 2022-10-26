@@ -17,7 +17,7 @@ class ShaderException(Exception):
 
 
 class Shader:
-    def __init__(self, vertex_path: str, fragment_path: str):
+    def __init__(self, vertex_path, fragment_path):
         self.program = self._load_program(vertex_path, fragment_path)
         self._uniform_to_location = self._get_uniforms_locations()
 
