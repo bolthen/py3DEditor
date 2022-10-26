@@ -1,19 +1,18 @@
-import pathlib
-
-from pathlib import Path
-
 import wx
 
+from pathlib import Path
 from camera import Camera
 from object.custom import CustomObject
 from object.model import Model
-from object.sphere import Sphere
+from object.sphere import Sphere, ColorSphere
 from shader import Shader
+from collections import deque
 
 
 class ModelsHandler:
     def __init__(self, camera: Camera):
         self.objects = []
+        self.temple_objects = deque()
         self.all_shaders = []
         self.model_shader = None
         self.light_shader = None
@@ -37,17 +36,20 @@ class ModelsHandler:
         self.model_shader.set_uniforms(lightColor=[1, 1, 1],
                                        lightPos=[0, 0, 0])
 
-    def open_new_model(self, path: pathlib.Path) -> Model:
+    def open_new_model(self, path: Path) -> Model:
         start_pos = self.camera.pos + self.camera.view_dir * 5
         model = Model(path, start_pos, self.model_shader)
         self.objects.append(model)
         return model
 
-    def create_new_sphere(self, texture: pathlib.Path) -> Sphere:
+    def create_new_sphere(self, texture: Path) -> Sphere:
         start_pos = self.camera.pos + self.camera.view_dir * 10
         sphere = Sphere(5, 50, 50, start_pos, self.model_shader, texture)
         self.objects.append(sphere)
         return sphere
+
+    def create_new_mark(self, pos: list, colour: list) -> ColorSphere:
+        return ColorSphere(0.5, 10, 10, pos, self.custom_shader, colour)
 
     def create_new_custom(self) -> CustomObject:
         start_pos = self.camera.pos + self.camera.view_dir * 5
@@ -61,16 +63,27 @@ class ModelsHandler:
             raise Exception()
         start_pos = self.camera.pos + self.camera.view_dir * 5
         self._active_custom_obj.add_new_vertex(start_pos, colour)
+        self.temple_objects.append(self.create_new_mark(start_pos,
+                                                        [colour.red,
+                                                         colour.green,
+                                                         colour.blue]))
+        if len(self.temple_objects) > 2:
+            self.temple_objects.popleft()
 
     def finish_object_creation(self) -> CustomObject:
         if self._active_custom_obj is None:
             raise Exception()
         obj = self._active_custom_obj
         self._active_custom_obj = None
+        self.temple_objects.clear()
         return obj
 
     def draw_all_objects(self) -> None:
+        self.model_shader.set_uniforms(lightColor=[1, 1, 1],
+                                       lightPos=self.camera.pos)
         for obj in self.objects:
+            obj.draw()
+        for obj in self.temple_objects:
             obj.draw()
 
     def get_objs_names(self) -> list:

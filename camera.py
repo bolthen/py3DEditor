@@ -84,7 +84,6 @@ class Camera:
     def do_movement(self, active_keys, delta_time: float):
         self.pos += self.movement.get_velocity(
             self.view_dir, active_keys) * delta_time
-        print(self.pos)
 
     def do_mouse_movement(self, x_offset, y_offset) -> None:
         x_offset *= self.mouse_sensitivity
