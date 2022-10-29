@@ -9,6 +9,7 @@
 3.1. [open new model](#open-new-model)</br>
 3.2. [new sphere](#new-sphere)</br>
 3.3. [create object](#create-object)</br>
+4. [Управление](#Управление)</br>
 
 ## Описание
 Программа, написанная на языке программирования Python, 

@@ -169,3 +169,56 @@ class MeshCustomObject(Mesh):
         glEnableVertexAttribArray(2)
 
         glBindVertexArray(0)
+
+
+class MeshLine(Mesh):
+    def __init__(self, materials: list):
+        super().__init__(materials, np.ndarray([]))
+
+    def _init_buffers(self):
+        '''
+        vertices: format 'V3F_C3F'
+        '''
+        # https://docs.gl/gl4/glGenVertexArrays
+        self.VAO = glGenVertexArrays(1)
+        # https://docs.gl/gl4/glGenBuffers
+        self.VBO = glGenBuffers(1)
+
+        vertices = self._get_all_vertices()
+
+        # https://docs.gl/gl3/glBindVertexArray
+        glBindVertexArray(self.VAO)
+        glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
+
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * vertices.itemsize,
+                              ctypes.c_void_p(0))
+
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * vertices.itemsize,
+                              ctypes.c_void_p(3 * vertices.itemsize))
+
+        # https://docs.gl/gl4/glEnableVertexAttribArray
+        glEnableVertexAttribArray(0)
+        glEnableVertexAttribArray(1)
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindVertexArray(0)
+
+    def draw(self, shader: Shader):
+        shader.use()
+        glBindVertexArray(self.VAO)
+
+        glDrawArrays(GL_LINES, 0, 2)
+        '''
+        current_idx = 0
+
+        for material in self.materials:
+            step = len(material.vertices) // 6
+            glDrawArrays(GL_LINES,
+                         current_idx,
+                         current_idx + step)
+            current_idx += step
+        '''
+
+        glBindVertexArray(0)

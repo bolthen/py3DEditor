@@ -20,11 +20,11 @@ class BaseObject:
         self.wireframe = False
         self.scale = scale
         self.shader = shader
-        self.transform = None
         self.pos = np.array(pos, dtype=np.float32)
         self.yaw = 0
         self.pitch = 0
         self.roll = 0
+        self.transform = None
         self._calculate_transform_matrix()
 
     def draw(self):
@@ -39,9 +39,9 @@ class BaseObject:
     def _calculate_transform_matrix(self):
         self.transform = \
             matrices.scale(self.scale) @ \
+            matrices.rotate_z(self.roll) @ \
             matrices.rotate_y(self.pitch) @ \
             matrices.rotate_x(self.yaw) @ \
-            matrices.rotate_z(self.roll) @ \
             matrices.translate(self.pos[0], self.pos[1], self.pos[2])
 
     def get_obj_name(self):
