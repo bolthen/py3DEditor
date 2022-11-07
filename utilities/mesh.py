@@ -222,3 +222,49 @@ class MeshLine(Mesh):
         '''
 
         glBindVertexArray(0)
+
+
+class MeshLightObject(Mesh):
+    def __init__(self, materials: list, indices: np.ndarray):
+        super().__init__(materials, indices)
+
+    def _init_buffers(self):
+        self.VAO = glGenVertexArrays(1)
+        self.VBO = glGenBuffers(1)
+        self.EBO = glGenBuffers(1)
+
+        vertices = self._get_all_vertices()
+
+        # https://docs.gl/gl3/glBindVertexArray
+        glBindVertexArray(self.VAO)
+        glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
+
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.EBO)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.indices, GL_STATIC_DRAW)
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * vertices.itemsize,
+                              ctypes.c_void_p(0))
+
+        glEnableVertexAttribArray(0)
+
+        glBindVertexArray(0)
+
+    def draw(self, shader: Shader):
+        shader.use()
+
+        glBindVertexArray(self.VAO)
+
+        current_idx = 0
+
+        for material in self.materials:
+            material.activate_texture(shader)
+            step = len(material.vertices) // 3
+            glDrawArrays(GL_TRIANGLES,
+                         current_idx,
+                         current_idx + step)
+            current_idx += step
+
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glBindVertexArray(0)

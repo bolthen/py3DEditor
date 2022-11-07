@@ -42,7 +42,6 @@ class ObjSettingsPanel(wx.Panel):
         self._splitter_size = 200
         self.main_vbox = wx.BoxSizer(wx.VERTICAL)
         self.splitter = wx.SplitterWindow(self, 0, style=wx.SP_LIVE_UPDATE)
-
         self.list_ctrl = ObjsListCtrl(self.splitter, self)
 
         scrollbar = scrolledpanel.ScrolledPanel(self.splitter, wx.ID_ANY,
@@ -50,20 +49,22 @@ class ObjSettingsPanel(wx.Panel):
         scrollbar.SetupScrolling()
         scroll_vbox = wx.BoxSizer(wx.VERTICAL)
         scrollbar.SetSizer(scroll_vbox)
-        NewObjectPanelsCreator(obj_handler, self).get_obj_gui_panels(
-            scrollbar, scroll_vbox)
 
-        self.splitter.SplitHorizontally(self.list_ctrl,
-                                        scrollbar,
+        self.panels_creator = NewObjectPanelsCreator(obj_handler, self)
+        self.panels_creator.get_obj_gui_panels(scrollbar, scroll_vbox)
+
+        self.splitter.SplitHorizontally(self.list_ctrl, scrollbar,
                                         self._splitter_size)
-
         self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGING,
                            self._on_splitter_resize)
+
         self.main_vbox.Add(self.splitter, wx.ID_ANY, flag=wx.EXPAND)
         self.SetSizer(self.main_vbox)
 
         self.obj_to_scroll = {1: scrollbar}
         self.actual_obj_idx = 1
+
+        self._create_new_light()
 
     def add_obj(self, obj: BaseObject) -> None:
         self.list_ctrl.add_object(obj.get_obj_name())
@@ -97,4 +98,8 @@ class ObjSettingsPanel(wx.Panel):
 
     def _on_splitter_resize(self, event):
         self._splitter_size = event.SashPosition
+
+    def _create_new_light(self) -> None:
+        light = self.panels_creator.obj_handler.create_light()
+        self.add_obj(light)
 
