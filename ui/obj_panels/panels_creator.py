@@ -30,13 +30,15 @@ class ObjectPanelsCreator:
         title.SetFont(title_font)
 
         self.wireframe_checkbox = wx.CheckBox(self.panel, label="Wireframe")
+        self.wireframe_checkbox.SetValue(self.obj.wireframe)
         self.wireframe_checkbox.SetFont(self.font)
         self.wireframe_checkbox.SetForegroundColour(self.FONT_COLOR)
         self.wireframe_checkbox.Bind(wx.EVT_CHECKBOX, self._change_wireframe)
 
-        pitch = self._get_angle_hbox("Pitch", self._change_pitch)
-        yaw = self._get_angle_hbox("Yaw", self._change_yaw)
-        roll = self._get_angle_hbox("Roll", self._change_roll)
+        pitch = self._get_angle_hbox("Pitch", self._change_pitch,
+                                     self.obj.pitch)
+        yaw = self._get_angle_hbox("Yaw", self._change_yaw, self.obj.yaw)
+        roll = self._get_angle_hbox("Roll", self._change_roll, self.obj.roll)
 
         x_pos = self._get_pos_hbox("x position", self._change_x_pos,
                                    self.obj.pos[0])
@@ -78,10 +80,11 @@ class ObjectPanelsCreator:
 
         return hbox
 
-    def _get_angle_hbox(self, text: str, handler) -> wx.BoxSizer:
+    def _get_angle_hbox(self, text: str, handler,
+                        default_value: float) -> wx.BoxSizer:
         hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        slider = wx.Slider(self.panel, wx.ID_ANY, 0, -180, 180)
+        slider = wx.Slider(self.panel, wx.ID_ANY, default_value, -180, 180)
         slider.Bind(wx.EVT_SCROLL, handler)
         slider.SetForegroundColour(self.FONT_COLOR)
 
