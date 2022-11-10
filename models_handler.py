@@ -2,7 +2,9 @@ import wx
 
 from pathlib import Path
 from camera import Camera
+from object.axes import Axes
 from object.custom import CustomObject
+from object.light_sphere import LightSphere
 from object.model import Model
 from object.sphere import Sphere, ColorSphere
 from utilities.shader import Shader
@@ -13,12 +15,15 @@ class ModelsHandler:
     def __init__(self, camera: Camera):
         self.objects = []
         self.temple_objects = deque()
+        self.camera = camera
         self.all_shaders = []
         self.model_shader = None
         self.light_shader = None
         self.custom_shader = None
-        self.camera = camera
+        self.axis_shader = None
         self._active_custom_obj = None
+        self.light = None
+        self.axes = None
 
     def init_shaders(self) -> None:
         shaders_location = Path(__file__).parent / 'opengl_shaders'
@@ -28,13 +33,17 @@ class ModelsHandler:
                                    shaders_location / 'light_fragment.glsl')
         self.custom_shader = Shader(shaders_location / 'custom_vertex.glsl',
                                     shaders_location / 'custom_fragment.glsl')
+        self.axis_shader = Shader(shaders_location / 'axis_vertex.glsl',
+                                  shaders_location / 'axis_fragment.glsl')
 
         self.all_shaders += [self.model_shader, self.light_shader,
-                             self.custom_shader]
+                             self.custom_shader, self.axis_shader]
 
-        # TODO setting light pos and light color
-        self.model_shader.set_uniforms(lightColor=[1, 1, 1],
-                                       lightPos=[0, 0, 0])
+        self.axes = Axes(self.axis_shader)
+
+    def create_light(self) -> LightSphere:
+        self.light = LightSphere([0, 0, 0], self.light_shader, [255, 255, 255])
+        return self.light
 
     def open_new_model(self, path: Path) -> Model:
         start_pos = self.camera.pos + self.camera.view_dir * 5
@@ -79,12 +88,18 @@ class ModelsHandler:
         return obj
 
     def draw_all_objects(self) -> None:
-        self.model_shader.set_uniforms(lightColor=[1, 1, 1],
-                                       lightPos=self.camera.pos)
+        self.model_shader.set_uniforms(lightColor=self.light.colour,
+                                       lightPos=self.light.pos)
         for obj in self.objects:
             obj.draw()
         for obj in self.temple_objects:
             obj.draw()
+        if self.light.shader is None:
+            self.light.shader = self.light_shader
+            self.light.colour = [255, 255, 255]
+        self.light.draw()
+        if self.axes is not None:
+            self.axes.draw()
 
     def get_objs_names(self) -> list:
         return [i.get_obj_name() for i in self.objects]

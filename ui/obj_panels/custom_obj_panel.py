@@ -38,9 +38,8 @@ class NewObjectPanelsCreator:
         self.finish_creation_button = wx.Button(panel, wx.ID_ANY, "create")
         self.finish_creation_button.Bind(wx.EVT_BUTTON, self._finish_creation)
 
-        self.custom_colour_picker = wx.ColourPickerCtrl(panel, wx.ID_ANY, style=wx.CLRP_USE_TEXTCTRL)
-        # self.custom_colour_picker.Bind(wx.EVT_COLOURPICKER_CHANGED,
-        #                                self._change_polygon_colour)
+        self.custom_colour_picker = wx.ColourPickerCtrl(
+            panel, wx.ID_ANY, style=wx.CLRP_USE_TEXTCTRL)
 
         sizer.Add(self.new_model_button, 0, wx.ALL | wx.EXPAND, 5)
         sizer.Add(self.new_sphere_button, 0, wx.ALL | wx.EXPAND, 5)
@@ -56,6 +55,7 @@ class NewObjectPanelsCreator:
         panels += [self.new_model_button, self.new_sphere_button,
                    self.new_custom_button, self.new_vertex_button,
                    self.finish_creation_button, self.custom_colour_picker]
+
         return panels
 
     def _new_model_open(self, event: CommandEvent) -> None:

@@ -23,3 +23,7 @@ class Vertex:
         return [self.red, self.green, self.blue,
                 self.n1, self.n2, self.n3,
                 self.x, self.y, self.z]
+
+    def to_opengl_coord_format(self):
+        # vertices: format 'V3F'
+        return [self.x, self.y, self.z]

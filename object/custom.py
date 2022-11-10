@@ -8,7 +8,7 @@ from utilities.shader import Shader
 
 class CustomObject(BaseObject):
     def __init__(self, start_pos: list, shader: Shader):
-        super().__init__(start_pos, shader)
+        super().__init__([0, 0, 0], shader)
         self.main_material = Material([], 0)
         self.main_mesh = MeshCustomObject(self.main_material)
         self.meshes.append(self.main_mesh)
@@ -32,9 +32,3 @@ class CustomObject(BaseObject):
     def get_obj_name(self):
         return "custom object"
 
-    def _calculate_transform_matrix(self):
-        self.transform = \
-            matrices.scale(self.scale) @ \
-            matrices.rotate_y(self.pitch) @ \
-            matrices.rotate_x(self.yaw) @ \
-            matrices.rotate_z(self.roll)

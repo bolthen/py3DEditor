@@ -48,6 +48,9 @@ class RedactorEngine:
         matrix = self.camera.get_view_matrix()
         for shader in self.obj_handler.all_shaders:
             shader.set_uniforms(view=matrix, viewPos=self.camera.pos)
+        self.obj_handler.axes.set_rotation(self.camera.pitch,
+                                           -self.camera.yaw,
+                                           self.camera.roll)
 
     def update_projection_matrix(self, aspect_ratio) -> None:
         matrix = self.camera.get_projection(aspect_ratio)

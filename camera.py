@@ -59,6 +59,7 @@ class Camera:
         self.up = np.array([0, 1, 0], dtype=np.float32)
         self.yaw = -90
         self.pitch = 0
+        self.roll = 0
         self.mouse_sensitivity = 0.03
         self.wheel_sensitivity = 3
         self.movement = _MovementSystem()

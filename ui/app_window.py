@@ -1,4 +1,6 @@
 import pathlib
+import time
+
 import wx
 import sys
 
